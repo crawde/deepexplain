@@ -1,4 +1,4 @@
-/* DeepExplain – Dirac Notation Interactive Visualizations (v2 — streamlined) */
+/* DeepExplain – Dirac Notation Visualizations v4 – Three.js Bloch sphere + animated D3 */
 
 document.addEventListener('DOMContentLoaded', () => {
   if (window.renderMathInElement) {
@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  initBlochSphere();
   initKetBuilder();
   initInnerProduct();
   initProjection();
@@ -22,7 +23,270 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-/* ───── KET BUILDER ───── */
+/* ═══════════════════════════════════════════════
+   THREE.JS BLOCH SPHERE HERO
+   ═══════════════════════════════════════════════ */
+function initBlochSphere() {
+  const canvas = document.getElementById('bloch-canvas');
+  if (!canvas || !window.THREE) return;
+
+  const container = document.getElementById('bloch-hero');
+  const readout = document.getElementById('hero-ket');
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+  camera.position.set(3.5, 2.5, 3.5);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+
+  // Lighting
+  const ambient = new THREE.AmbientLight(0x334466, 0.6);
+  scene.add(ambient);
+  const point = new THREE.PointLight(0x5c9ce6, 1.5, 20);
+  point.position.set(4, 5, 4);
+  scene.add(point);
+  const point2 = new THREE.PointLight(0xe68cd8, 0.6, 20);
+  point2.position.set(-3, -2, 3);
+  scene.add(point2);
+
+  // Wireframe sphere
+  const sphereGeo = new THREE.SphereGeometry(1.5, 32, 24);
+  const sphereMat = new THREE.MeshBasicMaterial({
+    color: 0x5c9ce6,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.06
+  });
+  const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+  scene.add(sphere);
+
+  // Equator ring
+  const ringGeo = new THREE.RingGeometry(1.49, 1.51, 64);
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0x5c9ce6, side: THREE.DoubleSide, transparent: true, opacity: 0.15 });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = Math.PI / 2;
+  scene.add(ring);
+
+  // Axes
+  function makeAxis(from, to, color, opacity) {
+    const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity });
+    const geo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(...from), new THREE.Vector3(...to)
+    ]);
+    return new THREE.Line(geo, mat);
+  }
+  scene.add(makeAxis([0, -1.8, 0], [0, 1.8, 0], 0x5c9ce6, 0.2)); // Z-axis
+  scene.add(makeAxis([-1.8, 0, 0], [1.8, 0, 0], 0x5c9ce6, 0.1)); // X-axis
+  scene.add(makeAxis([0, 0, -1.8], [0, 0, 1.8], 0x5c9ce6, 0.1)); // Y-axis
+
+  // Pole labels - using sprites
+  function makeLabel(text, pos, color) {
+    const c = document.createElement('canvas');
+    c.width = 128; c.height = 64;
+    const ctx = c.getContext('2d');
+    ctx.font = 'bold 36px monospace';
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.fillText(text, 64, 44);
+    const tex = new THREE.CanvasTexture(c);
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.7 });
+    const sprite = new THREE.Sprite(mat);
+    sprite.position.set(...pos);
+    sprite.scale.set(0.5, 0.25, 1);
+    return sprite;
+  }
+  scene.add(makeLabel('|0⟩', [0, 1.95, 0], '#5c9ce6'));
+  scene.add(makeLabel('|1⟩', [0, -1.95, 0], '#e68cd8'));
+
+  // State vector
+  let theta = 0.7, phi = 0.5; // initial state
+  const arrowGroup = new THREE.Group();
+  scene.add(arrowGroup);
+
+  // State dot
+  const dotGeo = new THREE.SphereGeometry(0.07, 16, 16);
+  const dotMat = new THREE.MeshPhongMaterial({
+    color: 0x66ff88,
+    emissive: 0x33aa55,
+    emissiveIntensity: 0.5
+  });
+  const dot = new THREE.Mesh(dotGeo, dotMat);
+
+  // State line
+  const lineMat = new THREE.LineBasicMaterial({ color: 0x66ff88, transparent: true, opacity: 0.6 });
+  const lineGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1.5, 0)
+  ]);
+  const stateLine = new THREE.Line(lineGeo, lineMat);
+
+  // Glow sprite for dot
+  const glowCanvas = document.createElement('canvas');
+  glowCanvas.width = 64; glowCanvas.height = 64;
+  const gCtx = glowCanvas.getContext('2d');
+  const grad = gCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, 'rgba(102, 255, 136, 0.6)');
+  grad.addColorStop(0.5, 'rgba(102, 255, 136, 0.1)');
+  grad.addColorStop(1, 'rgba(102, 255, 136, 0)');
+  gCtx.fillStyle = grad;
+  gCtx.fillRect(0, 0, 64, 64);
+  const glowTex = new THREE.CanvasTexture(glowCanvas);
+  const glowMat = new THREE.SpriteMaterial({ map: glowTex, transparent: true, opacity: 0.7 });
+  const glow = new THREE.Sprite(glowMat);
+  glow.scale.set(0.6, 0.6, 1);
+
+  arrowGroup.add(stateLine);
+  arrowGroup.add(dot);
+  arrowGroup.add(glow);
+
+  // Orbit particles
+  const particleCount = 200;
+  const particleGeo = new THREE.BufferGeometry();
+  const particlePositions = new Float32Array(particleCount * 3);
+  for (let i = 0; i < particleCount; i++) {
+    const r = 2.5 + Math.random() * 3;
+    const a = Math.random() * Math.PI * 2;
+    const b = (Math.random() - 0.5) * Math.PI;
+    particlePositions[i * 3] = r * Math.cos(b) * Math.cos(a);
+    particlePositions[i * 3 + 1] = r * Math.sin(b);
+    particlePositions[i * 3 + 2] = r * Math.cos(b) * Math.sin(a);
+  }
+  particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+  const particleMat = new THREE.PointsMaterial({ color: 0x5c9ce6, size: 0.02, transparent: true, opacity: 0.3 });
+  const particles = new THREE.Points(particleGeo, particleMat);
+  scene.add(particles);
+
+  function updateState() {
+    const x = 1.5 * Math.sin(theta) * Math.cos(phi);
+    const y = 1.5 * Math.cos(theta);
+    const z = 1.5 * Math.sin(theta) * Math.sin(phi);
+
+    dot.position.set(x, y, z);
+    glow.position.set(x, y, z);
+
+    const positions = stateLine.geometry.attributes.position.array;
+    positions[3] = x; positions[4] = y; positions[5] = z;
+    stateLine.geometry.attributes.position.needsUpdate = true;
+
+    // Update readout
+    const a = Math.cos(theta / 2);
+    const bRe = Math.sin(theta / 2) * Math.cos(phi);
+    const bIm = Math.sin(theta / 2) * Math.sin(phi);
+    let ket;
+    if (a > 0.99) ket = '|ψ⟩ = |0⟩';
+    else if (a < 0.01) ket = '|ψ⟩ = |1⟩';
+    else ket = `|ψ⟩ = ${a.toFixed(2)}|0⟩ + (${fmtComplex(bRe, bIm)})|1⟩`;
+    if (readout) readout.textContent = ket;
+  }
+
+  // Mouse/touch drag
+  let isDragging = false;
+  let lastMouse = { x: 0, y: 0 };
+  let autoRotate = true;
+
+  canvas.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    autoRotate = false;
+    lastMouse = { x: e.clientX, y: e.clientY };
+  });
+  canvas.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = (e.clientX - lastMouse.x) * 0.005;
+    const dy = (e.clientY - lastMouse.y) * 0.005;
+    phi += dx;
+    theta = Math.max(0.01, Math.min(Math.PI - 0.01, theta + dy));
+    lastMouse = { x: e.clientX, y: e.clientY };
+    updateState();
+  });
+  window.addEventListener('mouseup', () => { isDragging = false; });
+
+  // Touch
+  canvas.addEventListener('touchstart', (e) => {
+    isDragging = true;
+    autoRotate = false;
+    lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, { passive: true });
+  canvas.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    const dx = (e.touches[0].clientX - lastMouse.x) * 0.005;
+    const dy = (e.touches[0].clientY - lastMouse.y) * 0.005;
+    phi += dx;
+    theta = Math.max(0.01, Math.min(Math.PI - 0.01, theta + dy));
+    lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    updateState();
+  }, { passive: true });
+  canvas.addEventListener('touchend', () => { isDragging = false; });
+
+  updateState();
+
+  // Animation loop
+  let t = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    t += 0.008;
+
+    // Auto-rotate camera slowly
+    if (autoRotate) {
+      phi += 0.003;
+      theta = 0.7 + 0.3 * Math.sin(t * 0.5);
+      updateState();
+    }
+
+    // Gentle camera orbit
+    const camT = t * 0.15;
+    camera.position.x = 4 * Math.cos(camT);
+    camera.position.z = 4 * Math.sin(camT);
+    camera.position.y = 2 + 0.5 * Math.sin(t * 0.3);
+    camera.lookAt(0, 0, 0);
+
+    // Pulse glow
+    glow.material.opacity = 0.5 + 0.3 * Math.sin(t * 3);
+    dotMat.emissiveIntensity = 0.3 + 0.3 * Math.sin(t * 3);
+
+    // Rotate particles
+    particles.rotation.y = t * 0.05;
+    particles.rotation.x = Math.sin(t * 0.1) * 0.1;
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // Resize
+  window.addEventListener('resize', () => {
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  });
+}
+
+
+/* ═══════════════════════════════════════════════
+   UTILITY FUNCTIONS
+   ═══════════════════════════════════════════════ */
+function fmtAngle(rad) {
+  const pi = Math.PI;
+  if (Math.abs(rad) < 0.01) return '0';
+  if (Math.abs(rad - pi) < 0.04) return 'π';
+  if (Math.abs(rad - pi / 2) < 0.04) return 'π/2';
+  if (Math.abs(rad - pi / 4) < 0.04) return 'π/4';
+  if (Math.abs(rad - 3 * pi / 4) < 0.04) return '3π/4';
+  if (Math.abs(rad - 2 * pi) < 0.04) return '2π';
+  return (rad / pi).toFixed(2) + 'π';
+}
+
+function fmtComplex(re, im) {
+  if (Math.abs(im) < 0.001) return re.toFixed(3);
+  if (Math.abs(re) < 0.001) return im.toFixed(3) + 'i';
+  return `${re.toFixed(3)}${im >= 0 ? '+' : ''}${im.toFixed(3)}i`;
+}
+
+
+/* ═══════════════════════════════════════════════
+   KET BUILDER (with auto-animation)
+   ═══════════════════════════════════════════════ */
 function initKetBuilder() {
   const thetaSlider = document.getElementById('theta-slider');
   const phiSlider = document.getElementById('phi-slider');
@@ -31,6 +295,8 @@ function initKetBuilder() {
   const phiVal = document.getElementById('phi-val');
   const display = document.getElementById('ket-state-display');
   const output = document.getElementById('ket-output');
+
+  let userInteracted = false;
 
   function update() {
     const theta = (thetaSlider.value / 100) * Math.PI;
@@ -52,13 +318,29 @@ function initKetBuilder() {
       <div class="output-row"><span class="output-label">P(|1⟩) = |β|²</span><span class="output-value">${p1.toFixed(4)}</span></div>
       <div class="output-row"><span class="output-label">|α|² + |β|²</span><span class="output-value">${(p0 + p1).toFixed(6)}</span></div>`;
   }
-  thetaSlider.addEventListener('input', update);
-  phiSlider.addEventListener('input', update);
+
+  thetaSlider.addEventListener('input', () => { userInteracted = true; update(); });
+  phiSlider.addEventListener('input', () => { userInteracted = true; update(); });
+
+  // Auto-animate until user interacts
+  let animId;
+  function autoAnimate() {
+    if (userInteracted) return;
+    const t = Date.now() * 0.001;
+    thetaSlider.value = Math.round(157 + 80 * Math.sin(t * 0.7));
+    phiSlider.value = Math.round(314 + 200 * Math.sin(t * 0.5));
+    update();
+    animId = requestAnimationFrame(autoAnimate);
+  }
+  autoAnimate();
+
   update();
 }
 
 
-/* ───── INNER PRODUCT ───── */
+/* ═══════════════════════════════════════════════
+   INNER PRODUCT (with auto-animation)
+   ═══════════════════════════════════════════════ */
 function initInnerProduct() {
   const container = document.getElementById('inner-product-viz');
   if (!container) return;
@@ -69,20 +351,31 @@ function initInnerProduct() {
     .attr('viewBox', `0 0 ${w} ${h}`).attr('preserveAspectRatio', 'xMidYMid meet');
 
   svg.append('circle').attr('cx', cx).attr('cy', cy).attr('r', R)
-    .attr('fill', 'none').attr('stroke', '#222233');
+    .attr('fill', 'none').attr('stroke', '#1a1a2e').attr('stroke-width', 0.5);
   svg.append('line').attr('x1', cx - R - 10).attr('y1', cy).attr('x2', cx + R + 10).attr('y2', cy)
-    .attr('stroke', '#1a1a28').attr('stroke-width', 0.5);
+    .attr('stroke', '#111120').attr('stroke-width', 0.5);
   svg.append('line').attr('x1', cx).attr('y1', cy - R - 10).attr('x2', cx).attr('y2', cy + R + 10)
-    .attr('stroke', '#1a1a28').attr('stroke-width', 0.5);
+    .attr('stroke', '#111120').attr('stroke-width', 0.5);
   svg.append('text').attr('x', cx + R + 12).attr('y', cy + 4).text('|0⟩')
-    .attr('fill', '#555').attr('font-size', '11px');
+    .attr('fill', '#444').attr('font-size', '11px');
   svg.append('text').attr('x', cx - 5).attr('y', cy - R - 8).text('|1⟩')
-    .attr('fill', '#555').attr('font-size', '11px');
+    .attr('fill', '#444').attr('font-size', '11px');
 
   const psiLine = svg.append('line').attr('stroke', '#5c9ce6').attr('stroke-width', 2);
   const phiLine = svg.append('line').attr('stroke', '#e68cd8').attr('stroke-width', 2);
-  const psiDot = svg.append('circle').attr('r', 4).attr('fill', '#5c9ce6');
-  const phiDot = svg.append('circle').attr('r', 4).attr('fill', '#e68cd8');
+  const psiDot = svg.append('circle').attr('r', 5).attr('fill', '#5c9ce6');
+  const phiDot = svg.append('circle').attr('r', 5).attr('fill', '#e68cd8');
+
+  // Glow effects on dots
+  const defs = svg.append('defs');
+  const glowFilter = defs.append('filter').attr('id', 'glow');
+  glowFilter.append('feGaussianBlur').attr('stdDeviation', '3').attr('result', 'blur');
+  glowFilter.append('feMerge').selectAll('feMergeNode')
+    .data(['blur', 'SourceGraphic']).enter()
+    .append('feMergeNode').attr('in', d => d);
+  psiDot.attr('filter', 'url(#glow)');
+  phiDot.attr('filter', 'url(#glow)');
+
   const projLine = svg.append('line').attr('stroke', '#66bb6a').attr('stroke-width', 1.5)
     .attr('stroke-dasharray', '4,3');
   const arcPath = svg.append('path').attr('fill', 'none').attr('stroke', '#ffcc80').attr('stroke-width', 1)
@@ -95,6 +388,8 @@ function initInnerProduct() {
   const psiAngleVal = document.getElementById('psi-angle-val');
   const phiAngleVal = document.getElementById('phi-angle-val');
   const outputEl = document.getElementById('inner-product-output');
+
+  let userInteracted = false;
 
   function update() {
     const a1 = -(psiAngle.value * Math.PI / 180);
@@ -129,13 +424,32 @@ function initInnerProduct() {
       <div class="output-row"><span class="output-label">Angle</span><span class="output-value">${Math.abs(((psiAngle.value - phiAngle.value + 540) % 360) - 180).toFixed(1)}°</span></div>
       <div class="output-row"><span class="output-label">Orthogonal?</span><span class="output-value">${Math.abs(ip) < 0.01 ? '✓ Yes' : '✗ No'}</span></div>`;
   }
-  psiAngle.addEventListener('input', update);
-  phiAngle.addEventListener('input', update);
+
+  psiAngle.addEventListener('input', () => { userInteracted = true; update(); });
+  phiAngle.addEventListener('input', () => { userInteracted = true; update(); });
+
+  // Auto-animate
+  function autoAnimate() {
+    if (userInteracted) return;
+    const t = Date.now() * 0.001;
+    psiAngle.value = Math.round(180 + 150 * Math.sin(t * 0.4));
+    phiAngle.value = Math.round(90 + 80 * Math.sin(t * 0.6 + 1));
+    update();
+    requestAnimationFrame(autoAnimate);
+  }
+  // Start after a delay so it's visible when scrolled to
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !userInteracted) autoAnimate();
+  }, { threshold: 0.3 });
+  observer.observe(container);
+
   update();
 }
 
 
-/* ───── PROJECTION ───── */
+/* ═══════════════════════════════════════════════
+   PROJECTION (with auto-animation)
+   ═══════════════════════════════════════════════ */
 function initProjection() {
   const container = document.getElementById('projection-viz');
   if (!container) return;
@@ -146,17 +460,17 @@ function initProjection() {
     .attr('viewBox', `0 0 ${w} ${h}`).attr('preserveAspectRatio', 'xMidYMid meet');
 
   svg.append('circle').attr('cx', cx).attr('cy', cy).attr('r', R)
-    .attr('fill', 'none').attr('stroke', '#222233');
+    .attr('fill', 'none').attr('stroke', '#1a1a2e');
 
-  const psiDirLine = svg.append('line').attr('stroke', 'rgba(92,156,230,0.2)').attr('stroke-width', 1)
+  const psiDirLine = svg.append('line').attr('stroke', 'rgba(92,156,230,0.15)').attr('stroke-width', 1)
     .attr('stroke-dasharray', '3,3');
   const psiLine = svg.append('line').attr('stroke', '#5c9ce6').attr('stroke-width', 2);
   const chiLine = svg.append('line').attr('stroke', '#ffab40').attr('stroke-width', 2);
   const projectionLine = svg.append('line').attr('stroke', '#66bb6a').attr('stroke-width', 2.5);
   const dropLine = svg.append('line').attr('stroke', '#66bb6a').attr('stroke-width', 1).attr('stroke-dasharray', '4,3');
-  svg.append('circle').attr('cx', cx).attr('cy', cy).attr('r', 2.5).attr('fill', '#555');
-  const chiDot = svg.append('circle').attr('r', 4).attr('fill', '#ffab40');
-  const projDot = svg.append('circle').attr('r', 4).attr('fill', '#66bb6a');
+  svg.append('circle').attr('cx', cx).attr('cy', cy).attr('r', 2.5).attr('fill', '#333');
+  const chiDot = svg.append('circle').attr('r', 5).attr('fill', '#ffab40');
+  const projDot = svg.append('circle').attr('r', 5).attr('fill', '#66bb6a');
   const psiLabel = svg.append('text').attr('fill', '#5c9ce6').attr('font-size', '12px').text('|ψ⟩');
   const chiLabel = svg.append('text').attr('fill', '#ffab40').attr('font-size', '12px').text('|χ⟩');
   const projLabel = svg.append('text').attr('fill', '#66bb6a').attr('font-size', '12px').text('P|χ⟩');
@@ -166,6 +480,7 @@ function initProjection() {
   const psiVal = document.getElementById('proj-psi-val');
   const chiVal = document.getElementById('proj-chi-val');
   const outputEl = document.getElementById('projection-output');
+  let userInteracted = false;
 
   function update() {
     const a1 = -(psiAngle.value * Math.PI / 180);
@@ -196,13 +511,30 @@ function initProjection() {
       <div class="output-row"><span class="output-label">P_ψ|χ⟩ = ⟨ψ|χ⟩·|ψ⟩</span><span class="output-value">${dot.toFixed(3)} × |ψ⟩</span></div>
       <div class="output-row"><span class="output-label">‖P_ψ|χ⟩‖²</span><span class="output-value">${(dot * dot).toFixed(4)}</span></div>`;
   }
-  psiAngle.addEventListener('input', update);
-  chiAngle.addEventListener('input', update);
+
+  psiAngle.addEventListener('input', () => { userInteracted = true; update(); });
+  chiAngle.addEventListener('input', () => { userInteracted = true; update(); });
+
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !userInteracted) {
+      (function autoAnimate() {
+        if (userInteracted) return;
+        const t = Date.now() * 0.001;
+        chiAngle.value = Math.round(120 + 100 * Math.sin(t * 0.5));
+        update();
+        requestAnimationFrame(autoAnimate);
+      })();
+    }
+  }, { threshold: 0.3 });
+  observer.observe(container);
+
   update();
 }
 
 
-/* ───── OPERATOR ACTION ───── */
+/* ═══════════════════════════════════════════════
+   OPERATOR ACTION (with auto-animation)
+   ═══════════════════════════════════════════════ */
 function initOperatorAction() {
   const container = document.getElementById('operator-viz');
   if (!container) return;
@@ -213,474 +545,564 @@ function initOperatorAction() {
     .attr('viewBox', `0 0 ${w} ${h}`).attr('preserveAspectRatio', 'xMidYMid meet');
 
   svg.append('circle').attr('cx', cx).attr('cy', cy).attr('r', R)
-    .attr('fill', 'none').attr('stroke', '#222233');
-  svg.append('text').attr('x', cx + R + 10).attr('y', cy + 4).text('|0⟩').attr('fill', '#555').attr('font-size', '11px');
-  svg.append('text').attr('x', cx - 5).attr('y', cy - R - 6).text('|1⟩').attr('fill', '#555').attr('font-size', '11px');
+    .attr('fill', 'none').attr('stroke', '#1a1a2e');
+  svg.append('text').attr('x', cx + R + 12).attr('y', cy + 4).text('|0⟩')
+    .attr('fill', '#444').attr('font-size', '11px');
+  svg.append('text').attr('x', cx - 5).attr('y', cy - R - 8).text('|1⟩')
+    .attr('fill', '#444').attr('font-size', '11px');
 
-  // Arrow markers
-  const defs = svg.append('defs');
-  [['arr-b', '#5c9ce6'], ['arr-r', '#ef5350']].forEach(([id, color]) => {
-    defs.append('marker').attr('id', id).attr('viewBox', '0 0 10 10')
-      .attr('refX', 5).attr('refY', 5).attr('markerWidth', 5).attr('markerHeight', 5)
-      .attr('orient', 'auto-start-reverse')
-      .append('path').attr('d', 'M 0 0 L 10 5 L 0 10 z').attr('fill', color);
-  });
+  const inLine = svg.append('line').attr('stroke', '#5c9ce6').attr('stroke-width', 2);
+  const outLine = svg.append('line').attr('stroke', '#ef5350').attr('stroke-width', 2);
+  const inDot = svg.append('circle').attr('r', 5).attr('fill', '#5c9ce6');
+  const outDot = svg.append('circle').attr('r', 5).attr('fill', '#ef5350');
+  const inLabel = svg.append('text').attr('fill', '#5c9ce6').attr('font-size', '11px');
+  const outLabel = svg.append('text').attr('fill', '#ef5350').attr('font-size', '11px');
 
-  const inputLine = svg.append('line').attr('stroke', '#5c9ce6').attr('stroke-width', 2).attr('marker-end', 'url(#arr-b)');
-  const outputLine = svg.append('line').attr('stroke', '#ef5350').attr('stroke-width', 2).attr('marker-end', 'url(#arr-r)');
-  const inputDot = svg.append('circle').attr('r', 4).attr('fill', '#5c9ce6');
-  const outputDot = svg.append('circle').attr('r', 4).attr('fill', '#ef5350');
-  const inputLabel = svg.append('text').attr('fill', '#5c9ce6').attr('font-size', '11px').text('input');
-  const outputLabel = svg.append('text').attr('fill', '#ef5350').attr('font-size', '11px').text('output');
-
-  const operators = {
-    I: [[1, 0], [0, 1]],
-    X: [[0, 1], [1, 0]],
-    Y: [[0, -1], [1, 0]],
-    Z: [[1, 0], [0, -1]],
-    H: [[1 / Math.sqrt(2), 1 / Math.sqrt(2)], [1 / Math.sqrt(2), -1 / Math.sqrt(2)]]
-  };
+  const thetaSlider = document.getElementById('op-theta');
+  const thetaVal = document.getElementById('op-theta-val');
+  const outputEl = document.getElementById('operator-output');
+  const buttons = document.querySelectorAll('[data-op]');
   let currentOp = 'I';
+  let userInteracted = false;
 
-  document.querySelectorAll('[data-op]').forEach(btn => {
+  const ops = {
+    I: (a, b) => [a, b],
+    X: (a, b) => [b, a],
+    Y: (a, b) => [-b, a],
+    Z: (a, b) => [a, -b],
+    H: (a, b) => [(a + b) / Math.SQRT2, (a - b) / Math.SQRT2]
+  };
+
+  buttons.forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-op]').forEach(b => b.classList.remove('active'));
+      userInteracted = true;
+      buttons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentOp = btn.dataset.op;
       update();
     });
   });
 
-  const thetaSlider = document.getElementById('op-theta');
-  const thetaVal = document.getElementById('op-theta-val');
-  const outputEl = document.getElementById('operator-output');
-
   function update() {
     const theta = (thetaSlider.value / 100) * Math.PI;
     thetaVal.textContent = fmtAngle(theta);
+    const a = Math.cos(theta), b = Math.sin(theta);
+    const [oa, ob] = ops[currentOp](a, b);
+    const inA = -(Math.atan2(b, a));
+    const outA = -(Math.atan2(ob, oa));
 
-    const inp = [Math.cos(theta / 2), Math.sin(theta / 2)];
-    const m = operators[currentOp];
-    const out = [m[0][0] * inp[0] + m[0][1] * inp[1], m[1][0] * inp[0] + m[1][1] * inp[1]];
-    const norm = Math.sqrt(out[0] * out[0] + out[1] * out[1]);
-    const outN = [out[0] / norm, out[1] / norm];
+    const ix = cx + R * Math.cos(inA), iy = cy + R * Math.sin(inA);
+    const ox = cx + R * Math.cos(outA), oy = cy + R * Math.sin(outA);
 
-    const ix = cx + R * inp[0], iy = cy - R * inp[1];
-    const ox = cx + R * outN[0], oy = cy - R * outN[1];
+    inLine.attr('x1', cx).attr('y1', cy).attr('x2', ix).attr('y2', iy);
+    outLine.attr('x1', cx).attr('y1', cy).attr('x2', ox).attr('y2', oy);
+    inDot.attr('cx', ix).attr('cy', iy);
+    outDot.attr('cx', ox).attr('cy', oy);
+    inLabel.attr('x', ix + 8).attr('y', iy - 8).text('|ψ⟩');
+    outLabel.attr('x', ox + 8).attr('y', oy - 8).text(currentOp + '|ψ⟩');
 
-    inputLine.attr('x1', cx).attr('y1', cy).attr('x2', ix).attr('y2', iy);
-    outputLine.attr('x1', cx).attr('y1', cy).attr('x2', ox).attr('y2', oy);
-    inputDot.attr('cx', ix).attr('cy', iy);
-    outputDot.attr('cx', ox).attr('cy', oy);
-    inputLabel.attr('x', ix + 8).attr('y', iy - 8);
-    const dx = Math.abs(ox - ix), dy = Math.abs(oy - iy);
-    const overlap = dx < 20 && dy < 20;
-    outputLabel.attr('x', ox + 8).attr('y', oy - (overlap ? -16 : 8));
-
-    const names = { I: 'I', X: 'σ_x', Y: 'σ_y', Z: 'σ_z', H: 'H' };
     outputEl.innerHTML = `
-      <div class="output-row"><span class="output-label">Operator</span><span class="output-value">${names[currentOp]}</span></div>
-      <div class="output-row"><span class="output-label">Input</span><span class="output-value">(${inp[0].toFixed(3)}, ${inp[1].toFixed(3)})</span></div>
-      <div class="output-row"><span class="output-label">Output</span><span class="output-value">(${outN[0].toFixed(3)}, ${outN[1].toFixed(3)})</span></div>`;
+      <div class="output-row"><span class="output-label">Input</span><span class="output-value">${a.toFixed(3)}|0⟩ + ${b.toFixed(3)}|1⟩</span></div>
+      <div class="output-row"><span class="output-label">${currentOp} · |ψ⟩</span><span class="output-value">${oa.toFixed(3)}|0⟩ + ${ob.toFixed(3)}|1⟩</span></div>`;
   }
-  thetaSlider.addEventListener('input', update);
+
+  thetaSlider.addEventListener('input', () => { userInteracted = true; update(); });
+
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !userInteracted) {
+      (function autoAnimate() {
+        if (userInteracted) return;
+        const t = Date.now() * 0.001;
+        thetaSlider.value = Math.round(157 + 100 * Math.sin(t * 0.6));
+        update();
+        requestAnimationFrame(autoAnimate);
+      })();
+    }
+  }, { threshold: 0.3 });
+  observer.observe(container);
+
   update();
 }
 
 
-/* ───── BASIS CHANGE ───── */
+/* ═══════════════════════════════════════════════
+   BASIS CHANGE (with auto-animation)
+   ═══════════════════════════════════════════════ */
 function initBasisChange() {
   const container = document.getElementById('basis-change-viz');
   if (!container) return;
   const w = container.clientWidth, h = 340;
-  const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.33;
+  const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.32;
 
   const svg = d3.select('#basis-change-viz').append('svg')
     .attr('viewBox', `0 0 ${w} ${h}`).attr('preserveAspectRatio', 'xMidYMid meet');
 
-  [0.5, 1.0].forEach(f => {
-    svg.append('circle').attr('cx', cx).attr('cy', cy).attr('r', R * f)
-      .attr('fill', 'none').attr('stroke', '#161620').attr('stroke-width', 0.5);
-  });
+  svg.append('circle').attr('cx', cx).attr('cy', cy).attr('r', R)
+    .attr('fill', 'none').attr('stroke', '#1a1a2e');
 
-  const origX = svg.append('line').attr('stroke', 'rgba(92,156,230,0.35)').attr('stroke-width', 1);
-  const origY = svg.append('line').attr('stroke', 'rgba(92,156,230,0.35)').attr('stroke-width', 1);
-  const newX = svg.append('line').attr('stroke', 'rgba(102,187,106,0.35)').attr('stroke-width', 1);
-  const newY = svg.append('line').attr('stroke', 'rgba(102,187,106,0.35)').attr('stroke-width', 1);
-  const projO1 = svg.append('line').attr('stroke', 'rgba(92,156,230,0.25)').attr('stroke-width', 1).attr('stroke-dasharray', '3,3');
-  const projO2 = svg.append('line').attr('stroke', 'rgba(92,156,230,0.25)').attr('stroke-width', 1).attr('stroke-dasharray', '3,3');
-  const projN1 = svg.append('line').attr('stroke', 'rgba(102,187,106,0.25)').attr('stroke-width', 1).attr('stroke-dasharray', '3,3');
-  const projN2 = svg.append('line').attr('stroke', 'rgba(102,187,106,0.25)').attr('stroke-width', 1).attr('stroke-dasharray', '3,3');
-  const stateLine = svg.append('line').attr('stroke', '#e0e0e0').attr('stroke-width', 2);
-  const stateDot = svg.append('circle').attr('r', 4).attr('fill', '#e0e0e0');
-  const l0 = svg.append('text').attr('fill', '#5c9ce6').attr('font-size', '11px').text('|0⟩');
-  const l1 = svg.append('text').attr('fill', '#5c9ce6').attr('font-size', '11px').text('|1⟩');
-  const l0p = svg.append('text').attr('fill', '#66bb6a').attr('font-size', '11px').text("|0'⟩");
-  const l1p = svg.append('text').attr('fill', '#66bb6a').attr('font-size', '11px').text("|1'⟩");
+  const basisGroup = svg.append('g');
+  const rotBasisGroup = svg.append('g');
+  const projLines = svg.append('g');
+  const projLinesRot = svg.append('g');
+  const stateLine = svg.append('line').attr('stroke', '#ffffff').attr('stroke-width', 2);
+  const stateDot = svg.append('circle').attr('r', 5).attr('fill', '#ffffff');
 
   const stateAngle = document.getElementById('basis-state-angle');
   const rotAngle = document.getElementById('basis-rot-angle');
   const stateVal = document.getElementById('basis-state-val');
   const rotVal = document.getElementById('basis-rot-val');
   const outputEl = document.getElementById('basis-change-output');
+  let userInteracted = false;
+
+  function drawAxis(group, angle, color, label1, label2) {
+    group.selectAll('*').remove();
+    const dx = Math.cos(-angle * Math.PI / 180), dy = Math.sin(-angle * Math.PI / 180);
+    group.append('line')
+      .attr('x1', cx - R * 1.1 * dx).attr('y1', cy - R * 1.1 * dy)
+      .attr('x2', cx + R * 1.1 * dx).attr('y2', cy + R * 1.1 * dy)
+      .attr('stroke', color).attr('stroke-width', 1.5).attr('stroke-dasharray', '5,3');
+    group.append('line')
+      .attr('x1', cx + R * 1.1 * dy).attr('y1', cy - R * 1.1 * dx)
+      .attr('x2', cx - R * 1.1 * dy).attr('y2', cy + R * 1.1 * dx)
+      .attr('stroke', color).attr('stroke-width', 1.5).attr('stroke-dasharray', '5,3');
+    group.append('text').attr('x', cx + R * 1.15 * dx).attr('y', cy + R * 1.15 * dy + 4)
+      .text(label1).attr('fill', color).attr('font-size', '11px');
+    group.append('text').attr('x', cx + R * 1.15 * dy).attr('y', cy - R * 1.15 * dx + 4)
+      .text(label2).attr('fill', color).attr('font-size', '11px');
+  }
 
   function update() {
-    const sa = -(stateAngle.value * Math.PI / 180);
-    const ra = -(rotAngle.value * Math.PI / 180);
+    const sA = -stateAngle.value * Math.PI / 180;
+    const rA = rotAngle.value;
     stateVal.textContent = stateAngle.value + '°';
-    rotVal.textContent = rotAngle.value + '°';
+    rotVal.textContent = rA + '°';
 
-    origX.attr('x1', cx - R * 1.1).attr('y1', cy).attr('x2', cx + R * 1.1).attr('y2', cy);
-    origY.attr('x1', cx).attr('y1', cy + R * 1.1).attr('x2', cx).attr('y2', cy - R * 1.1);
-    l0.attr('x', cx + R * 1.1 + 5).attr('y', cy + 4);
-    l1.attr('x', cx - 5).attr('y', cy - R * 1.1 - 5);
+    drawAxis(basisGroup, 0, '#5c9ce6', '|0⟩', '|1⟩');
+    drawAxis(rotBasisGroup, rA, '#66bb6a', "|0'⟩", "|1'⟩");
 
-    const nx = Math.cos(ra), ny = Math.sin(ra);
-    newX.attr('x1', cx - R * 1.1 * nx).attr('y1', cy - R * 1.1 * ny)
-      .attr('x2', cx + R * 1.1 * nx).attr('y2', cy + R * 1.1 * ny);
-    newY.attr('x1', cx - R * 1.1 * (-ny)).attr('y1', cy - R * 1.1 * nx)
-      .attr('x2', cx + R * 1.1 * (-ny)).attr('y2', cy + R * 1.1 * nx);
-    l0p.attr('x', cx + R * 1.1 * nx + 5).attr('y', cy + R * 1.1 * ny + 4);
-    l1p.attr('x', cx + R * 1.1 * (-ny) + 5).attr('y', cy + R * 1.1 * nx + 4);
+    const sx = cx + R * Math.cos(sA), sy = cy + R * Math.sin(sA);
+    stateLine.attr('x1', cx).attr('y1', cy).attr('x2', sx).attr('y2', sy);
+    stateDot.attr('cx', sx).attr('cy', sy);
 
-    const sx = Math.cos(sa), sy = Math.sin(sa);
-    const ex = cx + R * sx, ey = cy + R * sy;
-    stateLine.attr('x1', cx).attr('y1', cy).attr('x2', ex).attr('y2', ey);
-    stateDot.attr('cx', ex).attr('cy', ey);
+    const a0 = Math.cos(sA), a1 = Math.sin(sA);
+    const rRad = -rA * Math.PI / 180;
+    const c0p = a0 * Math.cos(rRad) + a1 * Math.sin(rRad);
+    const c1p = -a0 * Math.sin(rRad) + a1 * Math.cos(rRad);
 
-    const c0 = sx, c1 = -sy;
-    const c0p = sx * nx + sy * ny;
-    const c1p = sx * (-ny) + sy * nx;
+    projLines.selectAll('*').remove();
+    projLines.append('line')
+      .attr('x1', sx).attr('y1', sy)
+      .attr('x2', cx + R * a0 * Math.cos(0)).attr('y2', cy)
+      .attr('stroke', '#5c9ce6').attr('stroke-width', 0.8).attr('stroke-dasharray', '3,2');
 
-    projO1.attr('x1', ex).attr('y1', ey).attr('x2', ex).attr('y2', cy);
-    projO2.attr('x1', ex).attr('y1', ey).attr('x2', cx).attr('y2', ey);
-    const p1x = cx + c0p * R * nx, p1y = cy + c0p * R * ny;
-    projN1.attr('x1', ex).attr('y1', ey).attr('x2', p1x).attr('y2', p1y);
-    const p2x = cx + c1p * R * (-ny), p2y = cy + c1p * R * nx;
-    projN2.attr('x1', ex).attr('y1', ey).attr('x2', p2x).attr('y2', p2y);
+    projLinesRot.selectAll('*').remove();
+    const rdx = Math.cos(rRad), rdy = Math.sin(rRad);
+    projLinesRot.append('line')
+      .attr('x1', sx).attr('y1', sy)
+      .attr('x2', cx + R * c0p * rdx).attr('y2', cy + R * c0p * rdy)
+      .attr('stroke', '#66bb6a').attr('stroke-width', 0.8).attr('stroke-dasharray', '3,2');
 
     outputEl.innerHTML = `
-      <div class="output-row"><span class="output-label">Original</span><span class="output-value">${c0.toFixed(3)}|0⟩ + ${c1.toFixed(3)}|1⟩</span></div>
-      <div class="output-row"><span class="output-label">Rotated</span><span class="output-value">${c0p.toFixed(3)}|0'⟩ + ${c1p.toFixed(3)}|1'⟩</span></div>
-      <div class="output-row"><span class="output-label">|c₀|² + |c₁|²</span><span class="output-value">${(c0 * c0 + c1 * c1).toFixed(4)}</span></div>
-      <div class="output-row"><span class="output-label">|c₀'|² + |c₁'|²</span><span class="output-value">${(c0p * c0p + c1p * c1p).toFixed(4)}</span></div>`;
+      <div class="output-row"><span class="output-label">Original: c₀, c₁</span><span class="output-value">${a0.toFixed(3)}, ${(-a1).toFixed(3)}</span></div>
+      <div class="output-row"><span class="output-label">Rotated: c₀', c₁'</span><span class="output-value">${c0p.toFixed(3)}, ${c1p.toFixed(3)}</span></div>
+      <div class="output-row"><span class="output-label">|c₀|²+|c₁|²</span><span class="output-value">${(a0*a0+a1*a1).toFixed(4)}</span></div>
+      <div class="output-row"><span class="output-label">|c₀'|²+|c₁'|²</span><span class="output-value">${(c0p*c0p+c1p*c1p).toFixed(4)}</span></div>`;
   }
-  stateAngle.addEventListener('input', update);
-  rotAngle.addEventListener('input', update);
+
+  stateAngle.addEventListener('input', () => { userInteracted = true; update(); });
+  rotAngle.addEventListener('input', () => { userInteracted = true; update(); });
+
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !userInteracted) {
+      (function autoAnimate() {
+        if (userInteracted) return;
+        const t = Date.now() * 0.001;
+        rotAngle.value = Math.round(90 + 80 * Math.sin(t * 0.4));
+        update();
+        requestAnimationFrame(autoAnimate);
+      })();
+    }
+  }, { threshold: 0.3 });
+  observer.observe(container);
+
   update();
 }
 
 
-/* ───── WAVEFUNCTION ───── */
+/* ═══════════════════════════════════════════════
+   WAVEFUNCTION (with auto-animation)
+   ═══════════════════════════════════════════════ */
 function initWavefunction() {
   const container = document.getElementById('wavefunction-viz');
   if (!container) return;
-  const width = container.clientWidth, height = 280;
-  const margin = { top: 20, right: 20, bottom: 35, left: 40 };
-  const w = width - margin.left - margin.right;
-  const h = height - margin.top - margin.bottom;
+  const w = container.clientWidth, h = 280;
 
   const svg = d3.select('#wavefunction-viz').append('svg')
-    .attr('viewBox', `0 0 ${width} ${height}`).attr('preserveAspectRatio', 'xMidYMid meet');
-  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+    .attr('viewBox', `0 0 ${w} ${h}`).attr('preserveAspectRatio', 'xMidYMid meet');
 
-  const xScale = d3.scaleLinear().domain([-6, 6]).range([0, w]);
-  const yScale = d3.scaleLinear().domain([-1, 1]).range([h, 0]);
-
-  g.append('g').attr('transform', `translate(0,${h})`).call(d3.axisBottom(xScale).ticks(6))
-    .selectAll('text').attr('fill', '#555').attr('font-size', '9px');
-  g.append('g').call(d3.axisLeft(yScale).ticks(4))
-    .selectAll('text').attr('fill', '#555').attr('font-size', '9px');
-  g.selectAll('.domain, .tick line').attr('stroke', '#1a1a28');
-
-  g.append('text').attr('x', w / 2).attr('y', h + 30).attr('text-anchor', 'middle')
-    .attr('fill', '#555').attr('font-size', '11px').text('x');
-
-  const probArea = g.append('path').attr('fill', 'rgba(92,156,230,0.12)');
-  const lineGen = d3.line().x(d => xScale(d[0])).y(d => yScale(d[1])).curve(d3.curveBasis);
-  const areaGen = d3.area().x(d => xScale(d[0])).y0(yScale(0)).y1(d => yScale(d[2])).curve(d3.curveBasis);
-  const psiPath = g.append('path').attr('fill', 'none').attr('stroke', '#5c9ce6').attr('stroke-width', 2);
-  const probPath = g.append('path').attr('fill', 'none').attr('stroke', 'rgba(92,156,230,0.4)').attr('stroke-width', 1.5)
-    .attr('stroke-dasharray', '4,3');
-
-  let currentWF = 'gaussian';
   const paramSlider = document.getElementById('wf-param');
   const centerSlider = document.getElementById('wf-center');
   const paramVal = document.getElementById('wf-param-val');
   const centerVal = document.getElementById('wf-center-val');
   const outputEl = document.getElementById('wavefunction-output');
+  const wfButtons = document.querySelectorAll('[data-wf]');
+  let currentWf = 'gaussian';
+  let userInteracted = false;
 
-  document.querySelectorAll('[data-wf]').forEach(btn => {
+  wfButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-wf]').forEach(b => b.classList.remove('active'));
+      userInteracted = true;
+      wfButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      currentWF = btn.dataset.wf;
+      currentWf = btn.dataset.wf;
       update();
     });
   });
 
-  function wf(x, sigma, x0) {
-    switch (currentWF) {
-      case 'gaussian': return Math.pow(1 / (2 * Math.PI * sigma * sigma), 0.25) * Math.exp(-(x - x0) * (x - x0) / (4 * sigma * sigma));
-      case 'plane-wave': return Math.cos(x0 * x) * Math.exp(-x * x / (4 * sigma * sigma)) * 0.8;
-      case 'superposition': return 0.6 * (Math.exp(-(x - 1.5) * (x - 1.5) / (2 * sigma * sigma)) + Math.exp(-(x + 1.5) * (x + 1.5) / (2 * sigma * sigma)));
-      case 'box': { const L = sigma * 4; return Math.abs(x) > L / 2 ? 0 : Math.sqrt(2 / L) * Math.sin(3 * Math.PI * (x + L / 2) / L); }
-      default: return 0;
-    }
-  }
-
   function update() {
     const sigma = paramSlider.value / 100;
-    const x0 = (centerSlider.value - 100) / 30;
-    paramVal.textContent = sigma.toFixed(2);
-    centerVal.textContent = x0.toFixed(2);
+    const x0 = (centerSlider.value - 100) / 25;
+    paramVal.textContent = sigma.toFixed(1);
+    centerVal.textContent = x0.toFixed(1);
 
+    const N = 300;
+    const xMin = -5, xMax = 5;
     const data = [];
-    for (let x = -6; x <= 6; x += 0.05) { const v = wf(x, sigma, x0); data.push([x, v, v * v]); }
-    const maxP = d3.max(data, d => Math.abs(d[1]));
-    const s = maxP > 0 ? 0.9 / maxP : 1;
-    const scaled = data.map(d => [d[0], d[1] * s, d[2] * s * s]);
+    for (let i = 0; i < N; i++) {
+      const x = xMin + (xMax - xMin) * i / (N - 1);
+      let psi, prob;
+      if (currentWf === 'gaussian') {
+        psi = Math.exp(-((x - x0) ** 2) / (2 * sigma * sigma));
+        prob = psi * psi;
+      } else if (currentWf === 'plane-wave') {
+        const k = x0 * 3;
+        const env = Math.exp(-(x * x) / (2 * sigma * sigma));
+        psi = env * Math.cos(k * x);
+        prob = env * env;
+      } else if (currentWf === 'superposition') {
+        const g1 = Math.exp(-((x + 1.5) ** 2) / (2 * sigma * sigma * 0.3));
+        const g2 = Math.exp(-((x - 1.5) ** 2) / (2 * sigma * sigma * 0.3));
+        psi = (g1 + g2) / Math.SQRT2;
+        prob = psi * psi;
+      } else {
+        const L = sigma * 4;
+        if (Math.abs(x) < L / 2) {
+          const n = Math.max(1, Math.round(Math.abs(x0) * 2 + 1));
+          psi = Math.cos(n * Math.PI * x / L);
+          prob = psi * psi;
+        } else {
+          psi = 0; prob = 0;
+        }
+      }
+      data.push({ x, psi, prob });
+    }
 
-    yScale.domain([-1, 1]);
-    psiPath.attr('d', lineGen(scaled));
-    probArea.attr('d', areaGen(scaled));
-    probPath.attr('d', d3.line().x(d => xScale(d[0])).y(d => yScale(d[2])).curve(d3.curveBasis)(scaled));
+    const maxP = d3.max(data, d => d.prob) || 1;
+    const xScale = d3.scaleLinear().domain([xMin, xMax]).range([40, w - 20]);
+    const yScale = d3.scaleLinear().domain([0, maxP * 1.2]).range([h - 30, 20]);
 
-    const norm2 = data.reduce((sum, d) => sum + d[2] * 0.05, 0);
+    svg.selectAll('*').remove();
+
+    // Axis
+    svg.append('line').attr('x1', 40).attr('y1', h - 30).attr('x2', w - 20).attr('y2', h - 30)
+      .attr('stroke', '#222235').attr('stroke-width', 0.5);
+
+    // Probability fill
+    const area = d3.area().x(d => xScale(d.x)).y0(h - 30).y1(d => yScale(d.prob)).curve(d3.curveMonotoneX);
+    svg.append('path').datum(data).attr('d', area)
+      .attr('fill', 'rgba(92,156,230,0.15)').attr('stroke', 'none');
+
+    // Wavefunction line
+    const line = d3.line().x(d => xScale(d.x)).y(d => yScale(d.prob)).curve(d3.curveMonotoneX);
+    svg.append('path').datum(data).attr('d', line)
+      .attr('fill', 'none').attr('stroke', '#5c9ce6').attr('stroke-width', 2);
+
+    // Real part (dimmer)
+    const yScalePsi = d3.scaleLinear().domain([-1.2, 1.2]).range([h - 30, 20]);
+    const psiLine = d3.line().x(d => xScale(d.x)).y(d => yScalePsi(d.psi)).curve(d3.curveMonotoneX);
+    svg.append('path').datum(data).attr('d', psiLine)
+      .attr('fill', 'none').attr('stroke', '#5c9ce6').attr('stroke-width', 1).attr('opacity', 0.3);
+
     outputEl.innerHTML = `
-      <div class="output-row"><span class="output-label">Type</span><span class="output-value">${currentWF}</span></div>
-      <div class="output-row"><span class="output-label">∫|ψ(x)|²dx ≈</span><span class="output-value">${norm2.toFixed(4)}</span></div>
-      <div class="output-row"><span class="output-label" style="color:#555">Blue = Re[ψ(x)], shaded = |ψ(x)|²</span></div>`;
+      <div class="output-row"><span class="output-label">Type</span><span class="output-value">${currentWf}</span></div>
+      <div class="output-row"><span class="output-label">σ</span><span class="output-value">${sigma.toFixed(2)}</span></div>`;
   }
-  paramSlider.addEventListener('input', update);
-  centerSlider.addEventListener('input', update);
+
+  paramSlider.addEventListener('input', () => { userInteracted = true; update(); });
+  centerSlider.addEventListener('input', () => { userInteracted = true; update(); });
+
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !userInteracted) {
+      (function autoAnimate() {
+        if (userInteracted) return;
+        const t = Date.now() * 0.001;
+        paramSlider.value = Math.round(100 + 60 * Math.sin(t * 0.3));
+        centerSlider.value = Math.round(100 + 40 * Math.sin(t * 0.5));
+        update();
+        requestAnimationFrame(autoAnimate);
+      })();
+    }
+  }, { threshold: 0.3 });
+  observer.observe(container);
+
   update();
 }
 
 
-/* ───── FOURIER TRANSFORM ───── */
+/* ═══════════════════════════════════════════════
+   FOURIER TRANSFORM (with auto-animation)
+   ═══════════════════════════════════════════════ */
 function initFourier() {
   const container = document.getElementById('fourier-viz');
   if (!container) return;
-  const width = container.clientWidth, height = 400;
-  const margin = { top: 22, right: 20, bottom: 25, left: 40 };
-  const halfH = (height - 25) / 2;
-  const w = width - margin.left - margin.right;
-  const h = halfH - margin.top - margin.bottom;
+  const w = container.clientWidth, h = 400;
 
   const svg = d3.select('#fourier-viz').append('svg')
-    .attr('viewBox', `0 0 ${width} ${height}`).attr('preserveAspectRatio', 'xMidYMid meet');
-
-  const gPos = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
-  const xSP = d3.scaleLinear().domain([-6, 6]).range([0, w]);
-  const ySP = d3.scaleLinear().domain([-1, 1]).range([h, 0]);
-  gPos.append('g').attr('transform', `translate(0,${h})`).call(d3.axisBottom(xSP).ticks(6)).selectAll('text').attr('fill', '#555').attr('font-size', '9px');
-  gPos.append('g').call(d3.axisLeft(ySP).ticks(3)).selectAll('text').attr('fill', '#555').attr('font-size', '9px');
-  gPos.selectAll('.domain, .tick line').attr('stroke', '#1a1a28');
-  gPos.append('text').attr('x', w / 2).attr('y', -6).attr('text-anchor', 'middle')
-    .attr('fill', '#5c9ce6').attr('font-size', '11px').text('ψ(x) — position');
-
-  const posArea = gPos.append('path').attr('fill', 'rgba(92,156,230,0.12)');
-  const posLine = gPos.append('path').attr('fill', 'none').attr('stroke', '#5c9ce6').attr('stroke-width', 2);
-
-  const gMom = svg.append('g').attr('transform', `translate(${margin.left},${halfH + margin.top + 3})`);
-  const xSM = d3.scaleLinear().domain([-6, 6]).range([0, w]);
-  const ySM = d3.scaleLinear().domain([-1, 1]).range([h, 0]);
-  gMom.append('g').attr('transform', `translate(0,${h})`).call(d3.axisBottom(xSM).ticks(6)).selectAll('text').attr('fill', '#555').attr('font-size', '9px');
-  gMom.append('g').call(d3.axisLeft(ySM).ticks(3)).selectAll('text').attr('fill', '#555').attr('font-size', '9px');
-  gMom.selectAll('.domain, .tick line').attr('stroke', '#1a1a28');
-  gMom.append('text').attr('x', w / 2).attr('y', -6).attr('text-anchor', 'middle')
-    .attr('fill', '#b388ff').attr('font-size', '11px').text('ψ̃(p) — momentum');
-
-  const momArea = gMom.append('path').attr('fill', 'rgba(179,136,255,0.12)');
-  const momLine = gMom.append('path').attr('fill', 'none').attr('stroke', '#b388ff').attr('stroke-width', 2);
-
-  svg.append('text').attr('x', width / 2).attr('y', halfH + 2).attr('text-anchor', 'middle')
-    .attr('fill', '#ffab40').attr('font-size', '11px').text('⟵ Fourier Transform ⟶');
+    .attr('viewBox', `0 0 ${w} ${h}`).attr('preserveAspectRatio', 'xMidYMid meet');
 
   const sigmaSlider = document.getElementById('fourier-sigma');
   const k0Slider = document.getElementById('fourier-k0');
   const sigmaVal = document.getElementById('fourier-sigma-val');
   const k0Val = document.getElementById('fourier-k0-val');
   const outputEl = document.getElementById('fourier-output');
+  let userInteracted = false;
 
   function update() {
     const sigma = sigmaSlider.value / 100;
     const k0 = (k0Slider.value - 100) / 20;
     sigmaVal.textContent = sigma.toFixed(2);
-    k0Val.textContent = k0.toFixed(2);
+    k0Val.textContent = k0.toFixed(1);
+
     const sigmaP = 1 / (2 * sigma);
+    const N = 200;
 
-    const posData = [], momData = [];
-    for (let x = -6; x <= 6; x += 0.04) {
-      const env = Math.exp(-x * x / (4 * sigma * sigma));
-      posData.push([x, env * Math.cos(k0 * x), env * env]);
+    // Position space
+    const xData = [];
+    for (let i = 0; i < N; i++) {
+      const x = -5 + 10 * i / (N - 1);
+      const psi = Math.exp(-(x * x) / (2 * sigma * sigma)) * Math.cos(k0 * x);
+      const prob = Math.exp(-(x * x) / (sigma * sigma));
+      xData.push({ x, psi, prob });
     }
-    for (let p = -6; p <= 6; p += 0.04) {
-      const g = Math.exp(-(p - k0) * (p - k0) / (4 * sigmaP * sigmaP));
-      momData.push([p, g, g * g]);
+
+    // Momentum space
+    const pData = [];
+    for (let i = 0; i < N; i++) {
+      const p = -5 + 10 * i / (N - 1);
+      const prob = Math.exp(-((p - k0) ** 2) * sigma * sigma);
+      pData.push({ p, prob });
     }
 
-    const maxP = d3.max(posData, d => Math.abs(d[1]));
-    const maxM = d3.max(momData, d => Math.abs(d[1]));
-    const sP = maxP > 0 ? 0.85 / maxP : 1;
-    const sM = maxM > 0 ? 0.85 / maxM : 1;
+    svg.selectAll('*').remove();
 
-    const lG = d3.line().x(d => xSP(d[0])).y(d => ySP(d[1])).curve(d3.curveBasis);
-    const aG = d3.area().x(d => xSP(d[0])).y0(ySP(0)).y1(d => ySP(d[2])).curve(d3.curveBasis);
-    posLine.attr('d', lG(posData.map(d => [d[0], d[1] * sP, d[2] * sP * sP])));
-    posArea.attr('d', aG(posData.map(d => [d[0], d[1] * sP, d[2] * sP * sP])));
+    const halfH = h / 2 - 15;
+    // Labels
+    svg.append('text').attr('x', 10).attr('y', 15).text('ψ(x) — Position').attr('fill', '#5c9ce6').attr('font-size', '11px')
+      .attr('font-family', '-apple-system, sans-serif');
+    svg.append('text').attr('x', 10).attr('y', halfH + 25).text('ψ̃(p) — Momentum').attr('fill', '#e68cd8').attr('font-size', '11px')
+      .attr('font-family', '-apple-system, sans-serif');
 
-    const lM = d3.line().x(d => xSM(d[0])).y(d => ySM(d[1])).curve(d3.curveBasis);
-    const aM = d3.area().x(d => xSM(d[0])).y0(ySM(0)).y1(d => ySM(d[2])).curve(d3.curveBasis);
-    momLine.attr('d', lM(momData.map(d => [d[0], d[1] * sM, d[2] * sM * sM])));
-    momArea.attr('d', aM(momData.map(d => [d[0], d[1] * sM, d[2] * sM * sM])));
+    // Position panel
+    const xScale = d3.scaleLinear().domain([-5, 5]).range([40, w - 20]);
+    const yScaleX = d3.scaleLinear().domain([0, 1.2]).range([halfH, 20]);
+    const yScalePsi = d3.scaleLinear().domain([-1.2, 1.2]).range([halfH, 20]);
 
-    const prod = sigma * sigmaP;
+    svg.append('line').attr('x1', 40).attr('y1', halfH).attr('x2', w - 20).attr('y2', halfH)
+      .attr('stroke', '#222235').attr('stroke-width', 0.5);
+
+    // σ indicators
+    const xSigLeft = xScale(-sigma), xSigRight = xScale(sigma);
+    svg.append('line').attr('x1', xSigLeft).attr('y1', 20).attr('x2', xSigLeft).attr('y2', halfH)
+      .attr('stroke', '#ff9800').attr('stroke-width', 1).attr('stroke-dasharray', '3,3').attr('opacity', 0.5);
+    svg.append('line').attr('x1', xSigRight).attr('y1', 20).attr('x2', xSigRight).attr('y2', halfH)
+      .attr('stroke', '#ff9800').attr('stroke-width', 1).attr('stroke-dasharray', '3,3').attr('opacity', 0.5);
+
+    const area = d3.area().x(d => xScale(d.x)).y0(halfH).y1(d => yScaleX(d.prob)).curve(d3.curveMonotoneX);
+    svg.append('path').datum(xData).attr('d', area).attr('fill', 'rgba(92,156,230,0.12)');
+    const psiLine = d3.line().x(d => xScale(d.x)).y(d => yScalePsi(d.psi)).curve(d3.curveMonotoneX);
+    svg.append('path').datum(xData).attr('d', psiLine)
+      .attr('fill', 'none').attr('stroke', '#5c9ce6').attr('stroke-width', 1.5);
+
+    // Momentum panel
+    const pScale = d3.scaleLinear().domain([-5, 5]).range([40, w - 20]);
+    const yScaleP = d3.scaleLinear().domain([0, 1.2]).range([h - 10, halfH + 30]);
+
+    svg.append('line').attr('x1', 40).attr('y1', h - 10).attr('x2', w - 20).attr('y2', h - 10)
+      .attr('stroke', '#222235').attr('stroke-width', 0.5);
+
+    // σ_p indicators
+    const pSigLeft = pScale(k0 - sigmaP), pSigRight = pScale(k0 + sigmaP);
+    svg.append('line').attr('x1', pSigLeft).attr('y1', halfH + 30).attr('x2', pSigLeft).attr('y2', h - 10)
+      .attr('stroke', '#ff9800').attr('stroke-width', 1).attr('stroke-dasharray', '3,3').attr('opacity', 0.5);
+    svg.append('line').attr('x1', pSigRight).attr('y1', halfH + 30).attr('x2', pSigRight).attr('y2', h - 10)
+      .attr('stroke', '#ff9800').attr('stroke-width', 1).attr('stroke-dasharray', '3,3').attr('opacity', 0.5);
+
+    const pArea = d3.area().x(d => pScale(d.p)).y0(h - 10).y1(d => yScaleP(d.prob)).curve(d3.curveMonotoneX);
+    svg.append('path').datum(pData).attr('d', pArea).attr('fill', 'rgba(230,140,216,0.12)');
+    const pLine = d3.line().x(d => pScale(d.p)).y(d => yScaleP(d.prob)).curve(d3.curveMonotoneX);
+    svg.append('path').datum(pData).attr('d', pLine)
+      .attr('fill', 'none').attr('stroke', '#e68cd8').attr('stroke-width', 1.5);
+
+    const product = sigma * sigmaP;
     outputEl.innerHTML = `
-      <div class="output-row"><span class="output-label">Δx = σ_x</span><span class="output-value">${sigma.toFixed(3)}</span></div>
-      <div class="output-row"><span class="output-label">Δp = 1/(2σ_x)</span><span class="output-value">${sigmaP.toFixed(3)}</span></div>
-      <div class="output-row"><span class="output-label">Δx · Δp</span><span class="output-value">${prod.toFixed(4)} ${prod <= 0.501 ? '= ℏ/2 (minimum!)' : '≥ ℏ/2 ✓'}</span></div>
+      <div class="output-row"><span class="output-label">σ_x</span><span class="output-value">${sigma.toFixed(3)}</span></div>
+      <div class="output-row"><span class="output-label">σ_p</span><span class="output-value">${sigmaP.toFixed(3)}</span></div>
+      <div class="output-row"><span class="output-label">σ_x · σ_p</span><span class="output-value">${product.toFixed(3)} ${product < 0.26 ? '≥ ℏ/2 ✓' : '≥ ℏ/2 ✓'}</span></div>
       <div class="output-row"><span class="output-label">k₀</span><span class="output-value">${k0.toFixed(2)}</span></div>`;
   }
-  sigmaSlider.addEventListener('input', update);
-  k0Slider.addEventListener('input', update);
+
+  sigmaSlider.addEventListener('input', () => { userInteracted = true; update(); });
+  k0Slider.addEventListener('input', () => { userInteracted = true; update(); });
+
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !userInteracted) {
+      (function autoAnimate() {
+        if (userInteracted) return;
+        const t = Date.now() * 0.001;
+        sigmaSlider.value = Math.round(100 + 80 * Math.sin(t * 0.3));
+        update();
+        requestAnimationFrame(autoAnimate);
+      })();
+    }
+  }, { threshold: 0.3 });
+  observer.observe(container);
+
   update();
 }
 
 
-/* ───── UNCERTAINTY PRINCIPLE ───── */
+/* ═══════════════════════════════════════════════
+   UNCERTAINTY PRINCIPLE (with auto-animation)
+   ═══════════════════════════════════════════════ */
 function initUncertainty() {
   const container = document.getElementById('uncertainty-viz');
   if (!container) return;
-  const width = container.clientWidth, height = 280;
-  const margin = { top: 18, right: 20, bottom: 25, left: 40 };
-  const halfW = (width - margin.left - margin.right) / 2 - 12;
-  const h = height - margin.top - margin.bottom;
+  const w = container.clientWidth, h = 280;
 
   const svg = d3.select('#uncertainty-viz').append('svg')
-    .attr('viewBox', `0 0 ${width} ${height}`).attr('preserveAspectRatio', 'xMidYMid meet');
-
-  // Left: position
-  const gX = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
-  const xSX = d3.scaleLinear().domain([-5, 5]).range([0, halfW]);
-  const ySX = d3.scaleLinear().domain([0, 1]).range([h, 0]);
-  gX.append('g').attr('transform', `translate(0,${h})`).call(d3.axisBottom(xSX).ticks(4)).selectAll('text').attr('fill', '#555').attr('font-size', '9px');
-  gX.selectAll('.domain, .tick line').attr('stroke', '#1a1a28');
-  gX.append('text').attr('x', halfW / 2).attr('y', -4).attr('text-anchor', 'middle')
-    .attr('fill', '#5c9ce6').attr('font-size', '10px').text('|ψ(x)|² — position');
-
-  const xArea = gX.append('path').attr('fill', 'rgba(92,156,230,0.15)');
-  const xLine = gX.append('path').attr('fill', 'none').attr('stroke', '#5c9ce6').attr('stroke-width', 2);
-  const dxL1 = gX.append('line').attr('stroke', '#ffab40').attr('stroke-width', 1).attr('stroke-dasharray', '3,3');
-  const dxL2 = gX.append('line').attr('stroke', '#ffab40').attr('stroke-width', 1).attr('stroke-dasharray', '3,3');
-  const dxLab = gX.append('text').attr('fill', '#ffab40').attr('font-size', '10px').attr('text-anchor', 'middle');
-
-  // Right: momentum
-  const gP = svg.append('g').attr('transform', `translate(${margin.left + halfW + 24},${margin.top})`);
-  const xSP = d3.scaleLinear().domain([-5, 5]).range([0, halfW]);
-  const ySP = d3.scaleLinear().domain([0, 1]).range([h, 0]);
-  gP.append('g').attr('transform', `translate(0,${h})`).call(d3.axisBottom(xSP).ticks(4)).selectAll('text').attr('fill', '#555').attr('font-size', '9px');
-  gP.selectAll('.domain, .tick line').attr('stroke', '#1a1a28');
-  gP.append('text').attr('x', halfW / 2).attr('y', -4).attr('text-anchor', 'middle')
-    .attr('fill', '#b388ff').attr('font-size', '10px').text('|ψ̃(p)|² — momentum');
-
-  const pArea = gP.append('path').attr('fill', 'rgba(179,136,255,0.15)');
-  const pLine = gP.append('path').attr('fill', 'none').attr('stroke', '#b388ff').attr('stroke-width', 2);
-  const dpL1 = gP.append('line').attr('stroke', '#ffab40').attr('stroke-width', 1).attr('stroke-dasharray', '3,3');
-  const dpL2 = gP.append('line').attr('stroke', '#ffab40').attr('stroke-width', 1).attr('stroke-dasharray', '3,3');
-  const dpLab = gP.append('text').attr('fill', '#ffab40').attr('font-size', '10px').attr('text-anchor', 'middle');
+    .attr('viewBox', `0 0 ${w} ${h}`).attr('preserveAspectRatio', 'xMidYMid meet');
 
   const dxSlider = document.getElementById('uncert-dx');
   const dxVal = document.getElementById('uncert-dx-val');
   const outputEl = document.getElementById('uncertainty-output');
+  let userInteracted = false;
 
   function update() {
     const dx = dxSlider.value / 100;
-    const dp = 0.5 / dx;
     dxVal.textContent = dx.toFixed(2);
+    const dp = 0.5 / dx;
 
-    const xData = [], pData = [];
-    for (let x = -5; x <= 5; x += 0.05) xData.push([x, Math.exp(-x * x / (2 * dx * dx)) / (dx * Math.sqrt(2 * Math.PI))]);
-    for (let p = -5; p <= 5; p += 0.05) pData.push([p, Math.exp(-p * p / (2 * dp * dp)) / (dp * Math.sqrt(2 * Math.PI))]);
+    const N = 200;
+    const halfW = w / 2 - 10;
 
-    const maxX = d3.max(xData, d => d[1]);
-    const maxP = d3.max(pData, d => d[1]);
-    ySX.domain([0, maxX * 1.2]);
-    ySP.domain([0, maxP * 1.2]);
+    // Position
+    const xData = [];
+    for (let i = 0; i < N; i++) {
+      const x = -4 + 8 * i / (N - 1);
+      xData.push({ x, y: Math.exp(-(x * x) / (2 * dx * dx)) });
+    }
 
-    xLine.attr('d', d3.line().x(d => xSX(d[0])).y(d => ySX(d[1])).curve(d3.curveBasis)(xData));
-    xArea.attr('d', d3.area().x(d => xSX(d[0])).y0(h).y1(d => ySX(d[1])).curve(d3.curveBasis)(xData));
-    pLine.attr('d', d3.line().x(d => xSP(d[0])).y(d => ySP(d[1])).curve(d3.curveBasis)(pData));
-    pArea.attr('d', d3.area().x(d => xSP(d[0])).y0(h).y1(d => ySP(d[1])).curve(d3.curveBasis)(pData));
+    // Momentum
+    const pData = [];
+    for (let i = 0; i < N; i++) {
+      const p = -4 + 8 * i / (N - 1);
+      pData.push({ p, y: Math.exp(-(p * p) / (2 * dp * dp)) });
+    }
 
-    dxL1.attr('x1', xSX(-dx)).attr('y1', 0).attr('x2', xSX(-dx)).attr('y2', h);
-    dxL2.attr('x1', xSX(dx)).attr('y1', 0).attr('x2', xSX(dx)).attr('y2', h);
-    dxLab.attr('x', xSX(0)).attr('y', h - 6).text(`σ_x = ${dx.toFixed(2)}`);
-    dpL1.attr('x1', xSP(-dp)).attr('y1', 0).attr('x2', xSP(-dp)).attr('y2', h);
-    dpL2.attr('x1', xSP(dp)).attr('y1', 0).attr('x2', xSP(dp)).attr('y2', h);
-    dpLab.attr('x', xSP(0)).attr('y', h - 6).text(`σ_p = ${dp.toFixed(2)}`);
+    svg.selectAll('*').remove();
 
-    const prod = dx * dp;
+    svg.append('text').attr('x', 10).attr('y', 15).text('|ψ(x)|²').attr('fill', '#5c9ce6').attr('font-size', '11px')
+      .attr('font-family', '-apple-system, sans-serif');
+    svg.append('text').attr('x', halfW + 20).attr('y', 15).text('|ψ̃(p)|²').attr('fill', '#e68cd8').attr('font-size', '11px')
+      .attr('font-family', '-apple-system, sans-serif');
+
+    // Position panel
+    const xScale = d3.scaleLinear().domain([-4, 4]).range([10, halfW]);
+    const yScale = d3.scaleLinear().domain([0, 1.2]).range([h - 20, 25]);
+    svg.append('line').attr('x1', 10).attr('y1', h - 20).attr('x2', halfW).attr('y2', h - 20)
+      .attr('stroke', '#222235').attr('stroke-width', 0.5);
+
+    // σ_x markers
+    svg.append('line').attr('x1', xScale(-dx)).attr('y1', 25).attr('x2', xScale(-dx)).attr('y2', h - 20)
+      .attr('stroke', '#ff9800').attr('stroke-width', 1).attr('stroke-dasharray', '3,3').attr('opacity', 0.5);
+    svg.append('line').attr('x1', xScale(dx)).attr('y1', 25).attr('x2', xScale(dx)).attr('y2', h - 20)
+      .attr('stroke', '#ff9800').attr('stroke-width', 1).attr('stroke-dasharray', '3,3').attr('opacity', 0.5);
+
+    const xArea = d3.area().x(d => xScale(d.x)).y0(h - 20).y1(d => yScale(d.y)).curve(d3.curveMonotoneX);
+    svg.append('path').datum(xData).attr('d', xArea).attr('fill', 'rgba(92,156,230,0.15)');
+    const xLine = d3.line().x(d => xScale(d.x)).y(d => yScale(d.y)).curve(d3.curveMonotoneX);
+    svg.append('path').datum(xData).attr('d', xLine)
+      .attr('fill', 'none').attr('stroke', '#5c9ce6').attr('stroke-width', 2);
+
+    // Momentum panel
+    const pScale = d3.scaleLinear().domain([-4, 4]).range([halfW + 20, w - 10]);
+    svg.append('line').attr('x1', halfW + 20).attr('y1', h - 20).attr('x2', w - 10).attr('y2', h - 20)
+      .attr('stroke', '#222235').attr('stroke-width', 0.5);
+
+    svg.append('line').attr('x1', pScale(-dp)).attr('y1', 25).attr('x2', pScale(-dp)).attr('y2', h - 20)
+      .attr('stroke', '#ff9800').attr('stroke-width', 1).attr('stroke-dasharray', '3,3').attr('opacity', 0.5);
+    svg.append('line').attr('x1', pScale(dp)).attr('y1', 25).attr('x2', pScale(dp)).attr('y2', h - 20)
+      .attr('stroke', '#ff9800').attr('stroke-width', 1).attr('stroke-dasharray', '3,3').attr('opacity', 0.5);
+
+    const pArea = d3.area().x(d => pScale(d.p)).y0(h - 20).y1(d => yScale(d.y)).curve(d3.curveMonotoneX);
+    svg.append('path').datum(pData).attr('d', pArea).attr('fill', 'rgba(230,140,216,0.15)');
+    const pLine = d3.line().x(d => pScale(d.p)).y(d => yScale(d.y)).curve(d3.curveMonotoneX);
+    svg.append('path').datum(pData).attr('d', pLine)
+      .attr('fill', 'none').attr('stroke', '#e68cd8').attr('stroke-width', 2);
+
+    const product = dx * dp;
     outputEl.innerHTML = `
       <div class="output-row"><span class="output-label">Δx</span><span class="output-value">${dx.toFixed(3)}</span></div>
-      <div class="output-row"><span class="output-label">Δp = 1/(2Δx)</span><span class="output-value">${dp.toFixed(3)}</span></div>
-      <div class="output-row"><span class="output-label">Δx · Δp</span><span class="output-value">${prod.toFixed(4)} ${prod <= 0.501 ? '= ℏ/2 (minimum!)' : '≥ ℏ/2 ✓'}</span></div>
-      <div class="output-row"><span class="output-label">Bound (ℏ/2)</span><span class="output-value">0.5000</span></div>`;
+      <div class="output-row"><span class="output-label">Δp</span><span class="output-value">${dp.toFixed(3)}</span></div>
+      <div class="output-row"><span class="output-label">Δx · Δp</span><span class="output-value">${product.toFixed(3)} = ℏ/2 ✓</span></div>`;
   }
-  dxSlider.addEventListener('input', update);
+
+  dxSlider.addEventListener('input', () => { userInteracted = true; update(); });
+
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !userInteracted) {
+      (function autoAnimate() {
+        if (userInteracted) return;
+        const t = Date.now() * 0.001;
+        dxSlider.value = Math.round(150 + 120 * Math.sin(t * 0.35));
+        update();
+        requestAnimationFrame(autoAnimate);
+      })();
+    }
+  }, { threshold: 0.3 });
+  observer.observe(container);
+
   update();
 }
 
 
-/* ───── EXERCISES ───── */
-window.checkExercise = function (n) {
+/* ═══════════════════════════════════════════════
+   EXERCISE CHECKER
+   ═══════════════════════════════════════════════ */
+function checkExercise(n) {
   const input = document.getElementById(`ex${n}-answer`);
-  const feedback = document.getElementById(`ex${n}-feedback`);
-  const val = input.value.trim().toLowerCase().replace(/\s+/g, '');
+  const fb = document.getElementById(`ex${n}-feedback`);
+  if (!input || !fb) return;
+  const ans = input.value.trim().toLowerCase().replace(/\s/g, '');
 
   const answers = {
-    1: { check: v => v === '0', msg: '⟨+|−⟩ = ½(⟨0|+⟨1|)(|0⟩−|1⟩) = ½(1−1) = 0. Orthogonal!' },
-    2: { check: v => v === '1/3' || v === '0.333' || v === '0.33', msg: '|⟨0|ψ⟩|² = |1/√3|² = 1/3 ≈ 0.333.' },
-    3: { check: v => (v.includes('1/√2') && v.includes('|0') && v.includes('-') && v.includes('|1')) || v === '|-⟩' || v === '|->',
-         msg: 'σ_z|+⟩ = (1/√2)(|0⟩ − |1⟩) = |−⟩. Pauli-Z flips the relative phase.' },
-    4: { check: v => v === '1/4' || v === '0.25', msg: 'Δp ≥ 1/(2·2) = 1/4 = 0.25.' },
-    5: { check: v => v === 'p' || v.includes('+><+') || v.includes('+⟩⟨+') || v === '|+><+|' || v === '|+⟩⟨+|',
-         msg: 'P² = |+⟩⟨+|+⟩⟨+| = |+⟩(⟨+|+⟩)⟨+| = |+⟩⟨+| = P. Idempotent!' },
-    6: { check: v => v === '0', msg: '⟨0|σ_x|0⟩ = ⟨0|1⟩ = 0. The state |0⟩ has zero expectation of σ_x.' },
-    7: { check: v => v === '1/2' || v === '0.5' || v === '0.50', msg: '⟨+|ψ⟩ = (1/2)(1+i), so |⟨+|ψ⟩|² = (1+1)/4 = 1/2.' },
-    8: { check: v => v === '-2i' || v === '-2iσy' || v === '-2i*σy' || v === '-2isy',
-         msg: '[σ_x,σ_z] = σ_xσ_z − σ_zσ_x = -iσ_y − iσ_y = -2iσ_y.' }
+    1: { accept: ['0'], hint: 'Expand using orthonormality: ⟨0|0⟩=1, ⟨0|1⟩=0, ⟨1|1⟩=1, ⟨1|0⟩=0' },
+    2: { accept: ['1/3', '0.333', '0.33'], hint: '⟨0|ψ⟩ = 1/√3, so |⟨0|ψ⟩|² = 1/3' },
+    3: { accept: ['(1/√2)(|0⟩-|1⟩)', '|−⟩', '|-⟩', '(1/sqrt(2))(|0>-|1>)'], hint: 'σz|0⟩=|0⟩, σz|1⟩=-|1⟩' },
+    4: { accept: ['0.25', '1/4', '.25'], hint: 'Δx·Δp ≥ ℏ/2, so Δp ≥ 1/(2·2) = 0.25' },
+    5: { accept: ['p', '|+><+|', '|+⟩⟨+|'], hint: 'P²=P means projecting twice = projecting once' },
+    6: { accept: ['0'], hint: '⟨0|σx|0⟩ = ⟨0|1⟩ = 0' },
+    7: { accept: ['1/2', '0.5', '0.50'], hint: '|⟨+|ψ⟩|² where |+⟩=(|0⟩+|1⟩)/√2' },
+    8: { accept: ['-2i', '-2i*sigma_y', '-2iσy'], hint: '[σx,σz] = σxσz - σzσx = ...' }
   };
 
-  if (!answers[n]) return;
-  if (answers[n].check(val)) {
-    feedback.className = 'feedback correct';
-    feedback.textContent = '✓ ' + answers[n].msg;
+  const q = answers[n];
+  if (!q) return;
+  if (q.accept.some(a => ans === a || ans.includes(a))) {
+    fb.textContent = '✓ Correct!';
+    fb.className = 'feedback correct';
   } else {
-    feedback.className = 'feedback incorrect';
-    feedback.textContent = '✗ Not quite — try again.';
+    fb.textContent = '✗ ' + q.hint;
+    fb.className = 'feedback wrong';
   }
-};
-
-
-/* ───── UTILITIES ───── */
-function fmtAngle(r) {
-  const π = Math.PI;
-  if (Math.abs(r) < 0.01) return '0';
-  if (Math.abs(r - π) < 0.03) return 'π';
-  if (Math.abs(r - π / 2) < 0.03) return 'π/2';
-  if (Math.abs(r - π / 3) < 0.03) return 'π/3';
-  if (Math.abs(r - π / 4) < 0.03) return 'π/4';
-  if (Math.abs(r - π / 6) < 0.03) return 'π/6';
-  if (Math.abs(r - 2 * π / 3) < 0.03) return '2π/3';
-  if (Math.abs(r - 3 * π / 4) < 0.03) return '3π/4';
-  if (Math.abs(r - 2 * π) < 0.03) return '2π';
-  return r.toFixed(2);
-}
-
-function fmtComplex(re, im) {
-  if (Math.abs(im) < 0.001) return re.toFixed(3);
-  if (Math.abs(re) < 0.001) return im.toFixed(3) + 'i';
-  return `${re.toFixed(3)} ${im >= 0 ? '+' : '-'} ${Math.abs(im).toFixed(3)}i`;
 }
