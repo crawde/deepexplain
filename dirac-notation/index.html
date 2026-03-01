@@ -35,7 +35,7 @@
   <span class="nav-current">Dirac Notation</span>
 </nav>
 
-<!-- ─── HERO: Full-width animated Bloch sphere ─── -->
+<!-- ─── HERO: Full-viewport animated Bloch sphere ─── -->
 <div class="hero-scene" id="bloch-hero">
   <canvas id="bloch-canvas"></canvas>
   <div class="hero-overlay">
@@ -54,16 +54,44 @@
 
 <main>
 
-<p>
-  That sphere you just played with is the Bloch sphere — a map of every possible state of a two-level quantum system. North pole: $|0\rangle$. South pole: $|1\rangle$. Every point on the surface is a superposition. Every rotation is an operation. Every measurement is a projection onto an axis.
+<p class="lead">
+  That sphere you just played with is the Bloch sphere — a complete map of every possible state of a two-level quantum system. The north pole represents $|0\rangle$. The south pole represents $|1\rangle$. Every other point on the surface is a superposition of the two, weighted by complex amplitudes that add up in a very specific way.
 </p>
 
 <p>
-  Paul Dirac invented a notation that makes all of this algebra effortless. It looks like this: $|\psi\rangle = \alpha|0\rangle + \beta|1\rangle$, where $\alpha$ and $\beta$ are complex numbers satisfying $|\alpha|^2 + |\beta|^2 = 1$. The vertical bar and angle bracket — $|\ \rangle$ — is called a <em>ket</em>. It represents a quantum state as a vector. The notation isn't decoration; it's machinery. Let's build intuition for it piece by piece, with interactive tools at every step.
+  In 1939, Paul Dirac published <em>The Principles of Quantum Mechanics</em>, and with it, a notation so clean that physicists never looked back. The vertical bar and angle bracket — $|\ \rangle$ — is not merely typography. It is machinery. It encodes the deepest structures of quantum mechanics in a form that makes calculation almost automatic. This article will build your intuition for every part of it, with interactive tools at each step so you can watch the mathematics respond to your touch.
 </p>
 
 <p>
-  The two complex amplitudes $\alpha$ and $\beta$ encode everything about the state. You can parameterize them with two real angles — $\theta$ and $\phi$ — via $\alpha = \cos(\theta/2)$ and $\beta = e^{i\phi}\sin(\theta/2)$. Drag the sliders and watch:
+  Let us begin with what a quantum state actually is.
+</p>
+
+<p>
+  A qubit — the simplest quantum system — has two basis states: $|0\rangle$ and $|1\rangle$. Unlike a classical bit, which must be one or the other, a qubit can exist in a <em>superposition</em>:
+</p>
+
+<p>
+  $$|\psi\rangle = \alpha|0\rangle + \beta|1\rangle$$
+</p>
+
+<p>
+  Here $\alpha$ and $\beta$ are complex numbers — not merely real ones — and they satisfy the normalization condition $|\alpha|^2 + |\beta|^2 = 1$. The notation $|\psi\rangle$ is called a <em>ket</em>. It denotes a vector in a complex vector space — a Hilbert space, to be precise. The label $\psi$ inside is arbitrary; it's a name, like a variable. You could write $|$cat$\rangle$ or $|$alive$\rangle$ or $|$spin-up$\rangle$. The brackets tell you what kind of mathematical object you're looking at.
+</p>
+
+<p>
+  Why complex numbers? Because they are the smallest number field that supports destructive interference. With positive reals, amplitudes can only add up: $|a + b| \leq |a| + |b|$, and typically $|a + b|$ is close to the sum. With complex numbers, partial or complete cancellation is possible — $|e^{i\theta} + e^{i\phi}|$ can equal zero when $\theta$ and $\phi$ differ by $\pi$. Without destructive interference, there is no quantum mechanics.
+</p>
+
+<p>
+  The two complex amplitudes $\alpha$ and $\beta$ encode everything about the state. But since $|\alpha|^2 + |\beta|^2 = 1$ imposes one constraint, and global phase has no physical meaning (multiplying the entire state by $e^{i\gamma}$ changes nothing observable), we really have two real degrees of freedom. We can parameterize them elegantly:
+</p>
+
+<p>
+  $$\alpha = \cos(\theta/2), \quad \beta = e^{i\phi}\sin(\theta/2)$$
+</p>
+
+<p>
+  where $\theta \in [0, \pi]$ controls the balance between $|0\rangle$ and $|1\rangle$, and $\phi \in [0, 2\pi)$ is the <em>relative phase</em>. These are the angles you saw on the Bloch sphere above — $\theta$ is the polar angle from the north pole, $\phi$ is the azimuthal angle around the equator. Drag the sliders below and watch how the state changes:
 </p>
 
 <!-- KET BUILDER -->
@@ -84,23 +112,50 @@
 </div>
 
 <p>
-  Watch $\theta$ first. When $\theta = 0$, the state is pure $|0\rangle$ — probability 1 at the top. When $\theta = \pi$, it's pure $|1\rangle$. At $\theta = \pi/2$, the probabilities split evenly: 50% each. The polar angle controls the <em>balance of probability</em>.
+  Watch $\theta$ first. When $\theta = 0$, the state is pure $|0\rangle$ — probability 1 at the north pole. When $\theta = \pi$, it's pure $|1\rangle$. At $\theta = \pi/2$, the probabilities split evenly: 50% chance of measuring $|0\rangle$, 50% chance of $|1\rangle$. The polar angle controls the <em>balance of probability</em>.
 </p>
 
 <p>
-  Now look at $\phi$. Drag it while keeping $\theta$ fixed at $\pi/2$. The probabilities don't change — still 50/50. But the amplitudes change: $\beta$ picks up a complex phase $e^{i\phi}$. When $\phi = 0$, the state is $\frac{1}{\sqrt{2}}(|0\rangle + |1\rangle)$. When $\phi = \pi$, it becomes $\frac{1}{\sqrt{2}}(|0\rangle - |1\rangle)$. Same probabilities, completely different states. The phase $\phi$ — the <em>relative phase</em> — determines interference. It's invisible to a $|0\rangle/|1\rangle$ measurement but shows up when you measure in a different basis. Probabilities alone don't define a state. You need complex amplitudes.
+  Now keep $\theta$ fixed at $\pi/2$ and drag $\phi$. Something subtle happens. The probabilities don't change — still 50/50. But the amplitudes do. When $\phi = 0$, the state is $\frac{1}{\sqrt{2}}(|0\rangle + |1\rangle)$, written $|+\rangle$. When $\phi = \pi$, it becomes $\frac{1}{\sqrt{2}}(|0\rangle - |1\rangle)$, written $|-\rangle$. Same measurement statistics in the $\{|0\rangle, |1\rangle\}$ basis — completely different states. The difference shows up when you measure in a different basis, say $\{|+\rangle, |-\rangle\}$: $|+\rangle$ gives outcome $+$ with certainty, while $|-\rangle$ gives outcome $-$ with certainty. Phase is invisible to one measurement but visible to others. This is the heart of quantum interference.
 </p>
 
 <p>
-  A global phase $e^{i\gamma}|\psi\rangle$ changes nothing physical — $|e^{i\gamma}\alpha|^2 = |\alpha|^2$. That's why we put all phase into $e^{i\phi}$ on $\beta$. Technically, quantum states are rays in Hilbert space, not vectors. The notation handles this: $|\psi\rangle$ and $e^{i\gamma}|\psi\rangle$ represent the same physical state.
+  A global phase $e^{i\gamma}|\psi\rangle$ changes nothing physically — $|e^{i\gamma}\alpha|^2 = |\alpha|^2$. This is why we conventionally put all phase into $\beta$ via $e^{i\phi}$, leaving $\alpha$ real and positive. Technically, quantum states are not vectors but <em>rays</em> in Hilbert space — equivalence classes under multiplication by $e^{i\gamma}$. The Bloch sphere makes this quotient explicit: each point is one physical state, with global phase already removed.
+</p>
+
+<!-- 3D: SUPERPOSITION EXPLORER -->
+<div class="scene-3d" id="superposition-scene">
+  <canvas id="superposition-canvas"></canvas>
+  <div class="scene-3d-overlay">
+    <div class="scene-3d-label">3D Interactive · Superposition as Vector Addition</div>
+    <div class="scene-3d-readout" id="superposition-readout">α|0⟩ + β|1⟩</div>
+  </div>
+</div>
+
+<p>
+  The 3D visualization above shows superposition geometrically. The blue arrow is the $|0\rangle$ component, the pink arrow is the $|1\rangle$ component, and the white arrow is their sum — the actual state vector. As the amplitudes evolve, you can see how the state sweeps through Hilbert space. This is not a metaphor; superposition <em>is</em> vector addition.
 </p>
 
 <p>
-  The space these vectors inhabit is a <em>Hilbert space</em>: a vector space with an inner product that is complete. For a qubit, it's $\mathbb{C}^2$. For a particle on a line, it's $L^2(\mathbb{R})$ — infinite-dimensional. The notation works identically regardless. Why complex numbers? Because they're the smallest number field that allows interference — $|\alpha + \beta|$ can be less than $|\alpha| + |\beta|$ when phases partly cancel. Destructive interference is impossible with positive reals.
+  The space these vectors inhabit is a <em>Hilbert space</em>: a vector space equipped with an inner product and the property of completeness (every Cauchy sequence converges). For a qubit, the Hilbert space is $\mathbb{C}^2$ — two complex dimensions. For a particle on a line, it's $L^2(\mathbb{R})$, the space of square-integrable functions — infinite-dimensional. For two qubits, it's $\mathbb{C}^2 \otimes \mathbb{C}^2 = \mathbb{C}^4$. For $n$ qubits, $\mathbb{C}^{2^n}$. The dimension grows exponentially, which is why quantum computers are interesting and quantum simulation is hard. Dirac notation works identically in all of these spaces.
+</p>
+
+<h2 class="section-break">Bras, Kets, and the Inner Product</h2>
+
+<p>
+  Every ket $|\psi\rangle$ has a partner: the <em>bra</em> $\langle\psi|$. If $|\psi\rangle = \alpha|0\rangle + \beta|1\rangle$, then $\langle\psi| = \alpha^*\langle 0| + \beta^*\langle 1|$ — the conjugate transpose. In matrix language, if $|\psi\rangle$ is a column vector, $\langle\psi|$ is the corresponding row vector with complex-conjugated entries. The name comes from Dirac's pun: a "bracket" $\langle\phi|\psi\rangle$ splits into a "bra" and a "ket."
 </p>
 
 <p>
-  Every ket has a partner: the <em>bra</em> $\langle\psi|$. If $|\psi\rangle = \alpha|0\rangle + \beta|1\rangle$, then $\langle\psi| = \alpha^*\langle 0| + \beta^*\langle 1|$ — the conjugate transpose. The bracket $\langle\phi|\psi\rangle$ is the <em>inner product</em>, measuring overlap. Born's rule: $|\langle\phi|\psi\rangle|^2$ is the probability of finding $|\psi\rangle$ in state $|\phi\rangle$. Two states are orthogonal when $\langle\phi|\psi\rangle = 0$. Drag the vectors and watch the overlap:
+  The bracket $\langle\phi|\psi\rangle$ is the <em>inner product</em> — a complex number that measures overlap between two states. It is linear in the second argument and antilinear in the first: $\langle\phi|c\psi\rangle = c\langle\phi|\psi\rangle$ but $\langle c\phi|\psi\rangle = c^*\langle\phi|\psi\rangle$. Born's rule then tells us that the probability of finding state $|\psi\rangle$ in state $|\phi\rangle$ upon measurement is $|\langle\phi|\psi\rangle|^2$.
+</p>
+
+<p>
+  Two states are <em>orthogonal</em> when $\langle\phi|\psi\rangle = 0$. Orthogonal states are perfectly distinguishable — measuring in the basis that contains both will always give a definite answer. Normalization means $\langle\psi|\psi\rangle = 1$. The computational basis states are orthonormal: $\langle 0|0\rangle = 1$, $\langle 1|1\rangle = 1$, $\langle 0|1\rangle = 0$, $\langle 1|0\rangle = 0$.
+</p>
+
+<p>
+  Drag the vectors below and watch the inner product change in real time. Pay special attention to what happens at 90° — orthogonality — and at 0° — normalization:
 </p>
 
 <!-- INNER PRODUCT -->
@@ -121,11 +176,42 @@
 </div>
 
 <p>
-  At 90° apart, the inner product is exactly zero — orthogonal, perfectly distinguishable. At the same angle, it's 1 — normalization, certainty. The green dashed line shows $|\langle\phi|\psi\rangle|$ geometrically as a projection.
+  The green dashed line shows $|\langle\phi|\psi\rangle|$ geometrically as the <em>projection</em> of one vector onto the other. At 90° apart, the projection length is exactly zero — the vectors share no overlap, and the measurement probability is zero. As they align, the projection grows, reaching maximum (1.0) when they point in the same direction.
 </p>
 
 <p>
-  Write the symbols in reverse: $|\phi\rangle\langle\psi|$ is an <em>operator</em>, not a number. When $|\phi\rangle = |\psi\rangle$, you get the <em>projection operator</em> $P_\psi = |\psi\rangle\langle\psi|$ — it casts the shadow of any state onto $|\psi\rangle$. Two key properties: $P^2 = P$ (projecting twice = projecting once) and $P^\dagger = P$ (Hermitian). Measurement <em>is</em> projection:
+  There is a deep geometric insight here. The inner product $\langle\phi|\psi\rangle = \cos\theta$ (for real states) is precisely the cosine of the angle between the two state vectors. This is not a coincidence — it's the definition of the inner product in the first place. Hilbert space <em>is</em> a geometry, and Dirac notation is its coordinate system.
+</p>
+
+<div class="aside-note">
+  <strong>Notation trap:</strong> $\langle\phi|\psi\rangle$ is a complex number. $|\psi\rangle\langle\phi|$ is an operator (a matrix). The order matters profoundly. The first is a scalar you can compute; the second is a transformation you can apply. Dirac notation makes this distinction typographically clear.
+</div>
+
+<!-- 3D: INNER PRODUCT IN 3D -->
+<div class="scene-3d" id="inner-product-3d-scene">
+  <canvas id="inner-product-3d-canvas"></canvas>
+  <div class="scene-3d-overlay">
+    <div class="scene-3d-label">3D Interactive · Inner Product as Projection</div>
+    <div class="scene-3d-readout" id="inner-product-3d-readout">⟨φ|ψ⟩ = 1.000</div>
+  </div>
+</div>
+
+<p>
+  The 3D visualization above shows the inner product from a three-dimensional perspective. Two state vectors float in space, and the projected component — the shadow of one onto the other — glows green. Rotate the view to see how projection works from different angles. The numerical readout below updates continuously.
+</p>
+
+<h2 class="section-break">Projection Operators and Measurement</h2>
+
+<p>
+  Write the symbols in reverse order: $|\psi\rangle\langle\psi|$. This is no longer a number — it's an <em>operator</em>. Applied to any state $|\chi\rangle$, it gives $|\psi\rangle\langle\psi|\chi\rangle = \langle\psi|\chi\rangle|\psi\rangle$ — the component of $|\chi\rangle$ along $|\psi\rangle$, times $|\psi\rangle$ itself. It casts the shadow of any state onto $|\psi\rangle$. This is the <em>projection operator</em> $P_\psi$.
+</p>
+
+<p>
+  Projection operators have two striking algebraic properties. First, $P^2 = P$ — projecting twice is the same as projecting once. (A shadow of a shadow is just the shadow.) This is called <em>idempotency</em>. Second, $P^\dagger = P$ — the operator is Hermitian, meaning its matrix equals its own conjugate transpose. Only Hermitian operators correspond to physical observables, and projection operators are the simplest kind.
+</p>
+
+<p>
+  Measurement in quantum mechanics <em>is</em> projection. When you measure a qubit in the $\{|0\rangle, |1\rangle\}$ basis, you apply the projection operators $P_0 = |0\rangle\langle 0|$ and $P_1 = |1\rangle\langle 1|$. The probability of outcome $n$ is $\text{tr}(P_n|\psi\rangle\langle\psi|) = |\langle n|\psi\rangle|^2$, and the post-measurement state is $P_n|\psi\rangle / \|P_n|\psi\rangle\|$. The state "collapses" to the eigenvector corresponding to the measurement outcome. This is not a dynamical process — it's the update rule for conditional probability in quantum theory.
 </p>
 
 <!-- PROJECTION -->
@@ -146,7 +232,41 @@
 </div>
 
 <p>
-  Observables are Hermitian operators with real eigenvalues. The most important qubit operators are the Pauli matrices: $\sigma_x$ flips ($|0\rangle \leftrightarrow |1\rangle$), $\sigma_z$ phases ($|1\rangle \to -|1\rangle$), $\sigma_y$ combines both. The Hadamard $H$ creates superpositions. See each transform a state vector:
+  Notice that when $|\chi\rangle$ is perpendicular to $|\psi\rangle$, the projection collapses to zero — the state has no component along $|\psi\rangle$, and the measurement probability is zero. When they align, the projection perfectly reproduces $|\chi\rangle$ — certainty. Everything in between is a continuum of partial overlap, partial probability.
+</p>
+
+<h2 class="section-break">Operators and Transformations</h2>
+
+<p>
+  An operator $\hat{A}$ transforms one ket into another: $\hat{A}|\psi\rangle = |\phi\rangle$. In Dirac notation, this is clean and unambiguous. In matrix notation, it's a matrix-vector multiplication. The most important operators in quantum computing are the Pauli matrices:
+</p>
+
+<p>
+  $$\sigma_x = |0\rangle\langle 1| + |1\rangle\langle 0| = \begin{pmatrix}0&1\\1&0\end{pmatrix}$$
+</p>
+
+<p>
+  This is the quantum NOT gate — it flips $|0\rangle \leftrightarrow |1\rangle$. Its eigenstates are $|+\rangle$ and $|-\rangle$ (the states that $\sigma_x$ leaves unchanged up to sign).
+</p>
+
+<p>
+  $$\sigma_z = |0\rangle\langle 0| - |1\rangle\langle 1| = \begin{pmatrix}1&0\\0&-1\end{pmatrix}$$
+</p>
+
+<p>
+  This applies a phase flip: $|0\rangle \to |0\rangle$, $|1\rangle \to -|1\rangle$. Its eigenstates are $|0\rangle$ (eigenvalue $+1$) and $|1\rangle$ (eigenvalue $-1$). Measurement of $\sigma_z$ is measurement in the computational basis.
+</p>
+
+<p>
+  $$\sigma_y = -i|0\rangle\langle 1| + i|1\rangle\langle 0| = \begin{pmatrix}0&-i\\i&0\end{pmatrix}$$
+</p>
+
+<p>
+  This combines bit flip and phase flip. The Hadamard gate $H = \frac{1}{\sqrt{2}}(\sigma_x + \sigma_z)$ creates superpositions: $H|0\rangle = |+\rangle$, $H|1\rangle = |-\rangle$. It is the gateway between computational and superposition bases.
+</p>
+
+<p>
+  All physical transformations are <em>unitary</em>: $U^\dagger U = I$. This preserves inner products and probabilities. Observables are <em>Hermitian</em>: $A = A^\dagger$, guaranteeing real eigenvalues (which are what we measure). The spectral theorem says every Hermitian operator can be written as $A = \sum_n a_n |a_n\rangle\langle a_n|$ — a weighted sum of projection operators onto its eigenstates, with the eigenvalues as weights.
 </p>
 
 <!-- OPERATOR ACTION -->
@@ -170,7 +290,29 @@
 </div>
 
 <p>
-  The completeness relation $\sum_n |n\rangle\langle n| = \hat{I}$ is the most powerful identity in QM. Insert it anywhere to change basis. The transformation matrix $U_{mn} = \langle m'|n\rangle$ is unitary, preserving probabilities. Watch components change while the state stays fixed:
+  Click through each operator and watch how it transforms the blue input vector into the red output vector. With $\sigma_x$, the vector reflects across the equator. With $\sigma_z$, it reflects across the polar axis. The Hadamard $H$ performs a rotation that swaps the $z$-axis and $x$-axis. These are not arbitrary transformations — they are the <em>generators of rotations</em> on the Bloch sphere, and every single-qubit gate is a rotation.
+</p>
+
+<h2 class="section-break">Completeness and Change of Basis</h2>
+
+<p>
+  The single most powerful identity in quantum mechanics is the <em>completeness relation</em>:
+</p>
+
+<p>
+  $$\sum_n |n\rangle\langle n| = \hat{I}$$
+</p>
+
+<p>
+  This says that the projection operators onto a complete basis add up to the identity operator. It sounds trivial, but its power lies in what you can do with it: insert it <em>anywhere</em> in an expression to change basis. Want to express state $|\psi\rangle$ in a new basis $\{|n'\rangle\}$? Insert completeness:
+</p>
+
+<p>
+  $$|\psi\rangle = \hat{I}|\psi\rangle = \sum_{n'} |n'\rangle\langle n'|\psi\rangle = \sum_{n'} c_{n'} |n'\rangle$$
+</p>
+
+<p>
+  where $c_{n'} = \langle n'|\psi\rangle$ are the new expansion coefficients. The transformation matrix $U_{mn} = \langle m'|n\rangle$ is unitary, meaning $|c_0'|^2 + |c_1'|^2 = |c_0|^2 + |c_1|^2 = 1$. Probabilities are preserved, as they must be.
 </p>
 
 <!-- BASIS CHANGE -->
@@ -191,7 +333,37 @@
 </div>
 
 <p>
-  Now infinite dimensions: a particle on a line. The wavefunction $\psi(x) = \langle x|\psi\rangle$ is just a basis expansion. Probability density: $|\psi(x)|^2$. Explore different shapes:
+  The blue dashed axes are the original basis; the green dashed axes are the rotated basis. The state vector (white) doesn't move — only its <em>description</em> changes. In the original basis, it might be mostly $|0\rangle$. In the rotated basis, it might be an equal superposition. The state is invariant; the coordinates are not. This is exactly like how a physical vector doesn't change when you rotate your coordinate axes — only its components change.
+</p>
+
+<p>
+  The Hadamard gate is precisely the change-of-basis matrix from $\{|0\rangle, |1\rangle\}$ to $\{|+\rangle, |-\rangle\}$. Every quantum gate can be thought of as a change of basis followed by a phase in the new basis followed by a change back. The entire theory of quantum computation reduces to clever sequences of basis changes.
+</p>
+
+<h2 class="section-break">Continuous Bases and Wavefunctions</h2>
+
+<p>
+  Everything so far has been finite-dimensional: two basis states, $|0\rangle$ and $|1\rangle$. But Dirac notation extends seamlessly to infinite dimensions. A particle on a line has a continuous set of position eigenstates $|x\rangle$, one for each point $x \in \mathbb{R}$. The completeness relation becomes an integral:
+</p>
+
+<p>
+  $$\int_{-\infty}^{\infty} |x\rangle\langle x|\,dx = \hat{I}$$
+</p>
+
+<p>
+  Insert this into any state $|\psi\rangle$:
+</p>
+
+<p>
+  $$|\psi\rangle = \int |x\rangle\langle x|\psi\rangle\,dx = \int \psi(x)|x\rangle\,dx$$
+</p>
+
+<p>
+  The function $\psi(x) = \langle x|\psi\rangle$ is the <em>wavefunction</em> — the inner product of $|\psi\rangle$ with each position eigenstate. It is not a separate concept from the ket; it <em>is</em> the ket, expressed in the position basis. The probability density is $|\psi(x)|^2$, and normalization gives $\int |\psi(x)|^2 dx = 1$.
+</p>
+
+<p>
+  The Gaussian wavefunction $\psi(x) = (2\pi\sigma^2)^{-1/4}\exp(-(x-x_0)^2/4\sigma^2)$ describes a particle localized around position $x_0$ with spread $\sigma$. It is the minimum-uncertainty state — the one that saturates the Heisenberg bound. Explore different wavefunctions below:
 </p>
 
 <!-- WAVEFUNCTION -->
@@ -218,7 +390,33 @@
 </div>
 
 <p>
-  Switching to momentum space is a Fourier transform — derived from inserting completeness. A narrow $\psi(x)$ gives a wide $\tilde{\psi}(p)$, and vice versa. The product $\Delta x \cdot \Delta p$ never drops below $\hbar/2$:
+  The filled area is the probability density $|\psi(x)|^2$. The fainter oscillating curve is the real part of $\psi(x)$ itself — the actual wavefunction. For a plane wave, the probability density is constant (completely delocalized), but the wavefunction oscillates with a definite wavelength. For a superposition of two Gaussians, you see interference fringes in the probability density — the hallmark of quantum mechanics.
+</p>
+
+<p>
+  The infinite square well is particularly instructive. The wavefunction must vanish at the walls, constraining the allowed energies to $E_n = n^2\pi^2\hbar^2/(2mL^2)$. Only discrete wavelengths fit — quantization emerges from boundary conditions, not from any fundamental granularity of nature.
+</p>
+
+<h2 class="section-break">Fourier Duality: Position ↔ Momentum</h2>
+
+<p>
+  There is a momentum basis too: $\{|p\rangle\}$, where $\hat{p}|p\rangle = p|p\rangle$. The position and momentum bases are related by a Fourier transform — and this is not an analogy. The Fourier transform <em>is</em> a change of basis, derived by inserting completeness:
+</p>
+
+<p>
+  $$\tilde{\psi}(p) = \langle p|\psi\rangle = \int \langle p|x\rangle\langle x|\psi\rangle\,dx = \frac{1}{\sqrt{2\pi\hbar}}\int e^{-ipx/\hbar}\psi(x)\,dx$$
+</p>
+
+<p>
+  A narrow wavefunction in position (small $\sigma_x$) gives a wide distribution in momentum (large $\sigma_p$), and vice versa. This is not a limitation of measurement — it is a mathematical property of Fourier transforms. The uncertainty principle:
+</p>
+
+<p>
+  $$\Delta x \cdot \Delta p \geq \frac{\hbar}{2}$$
+</p>
+
+<p>
+  is a theorem about the widths of a function and its Fourier transform. The Gaussian saturates this bound — it is the unique state with minimum uncertainty product.
 </p>
 
 <!-- FOURIER -->
@@ -239,7 +437,25 @@
 </div>
 
 <p>
-  The uncertainty principle $\Delta A \cdot \Delta B \geq \frac{1}{2}|\langle[\hat{A},\hat{B}]\rangle|$ follows from Cauchy-Schwarz. For $[\hat{x},\hat{p}] = i\hbar$, you get $\Delta x \cdot \Delta p \geq \hbar/2$. The Gaussian saturates this bound:
+  The orange dashed lines mark the standard deviations $\sigma_x$ and $\sigma_p$. Watch them breathe as you drag the position width slider — squeeze one and the other expands, always maintaining $\sigma_x \sigma_p = \hbar/2$ for the Gaussian. The momentum slider $k_0$ shifts the momentum distribution without changing its width — it adds a carrier frequency to the wavefunction, making it oscillate faster in position space.
+</p>
+
+<h2 class="section-break">The Uncertainty Principle</h2>
+
+<p>
+  The general form of the uncertainty principle is:
+</p>
+
+<p>
+  $$\Delta A \cdot \Delta B \geq \frac{1}{2}|\langle[\hat{A}, \hat{B}]\rangle|$$
+</p>
+
+<p>
+  where $[\hat{A}, \hat{B}] = \hat{A}\hat{B} - \hat{B}\hat{A}$ is the commutator. For position and momentum, $[\hat{x}, \hat{p}] = i\hbar$, giving the familiar $\Delta x \Delta p \geq \hbar/2$. This is derived entirely from the Cauchy-Schwarz inequality applied to the Hilbert space inner product — it's a geometric statement about vectors, not a statement about measurement disturbance.
+</p>
+
+<p>
+  The proof is beautiful: define $|f\rangle = (\hat{A} - \langle A\rangle)|\psi\rangle$ and $|g\rangle = (\hat{B} - \langle B\rangle)|\psi\rangle$. Then $\Delta A^2 = \langle f|f\rangle$ and $\Delta B^2 = \langle g|g\rangle$. Cauchy-Schwarz gives $\langle f|f\rangle\langle g|g\rangle \geq |\langle f|g\rangle|^2$, and the right side contains the commutator. The inequality follows in three lines.
 </p>
 
 <!-- UNCERTAINTY -->
@@ -256,7 +472,47 @@
 </div>
 
 <p>
-  Time evolution: $|\psi(t)\rangle = \sum_n c_n e^{-iE_n t/\hbar}|E_n\rangle$ — each energy eigenstate getting a rotating phase. The architecture is stunningly coherent — states are kets, observables are Hermitian operators, transformations are unitary, completeness lets you change basis, the wavefunction is an inner product, the Fourier transform is a basis change, and the uncertainty principle is Cauchy-Schwarz.
+  The left panel shows the position-space probability density $|\psi(x)|^2$; the right shows the momentum-space density $|\tilde\psi(p)|^2$. As you shrink $\Delta x$, the position peak sharpens — you know more precisely <em>where</em> the particle is — but the momentum distribution spreads out. You lose information about <em>how fast</em> it's moving. The product is always $\hbar/2$ for the minimum-uncertainty Gaussian.
+</p>
+
+<h2 class="section-break">Time Evolution</h2>
+
+<p>
+  The Schrödinger equation governs how quantum states evolve:
+</p>
+
+<p>
+  $$i\hbar\frac{d}{dt}|\psi(t)\rangle = \hat{H}|\psi(t)\rangle$$
+</p>
+
+<p>
+  where $\hat{H}$ is the Hamiltonian — the energy operator. If $\hat{H}$ has eigenstates $|E_n\rangle$ with eigenvalues $E_n$, then the general solution is:
+</p>
+
+<p>
+  $$|\psi(t)\rangle = \sum_n c_n e^{-iE_n t/\hbar}|E_n\rangle$$
+</p>
+
+<p>
+  Each energy eigenstate picks up a phase $e^{-iE_n t/\hbar}$ that rotates at a frequency proportional to its energy. The state itself doesn't change shape — the coefficients $c_n$ are fixed — but the <em>relative phases</em> between different energy components evolve. This is exactly the mechanism behind quantum beats, Rabi oscillations, and quantum computing gate sequences.
+</p>
+
+<p>
+  The time evolution operator $U(t) = e^{-i\hat{H}t/\hbar}$ is unitary, confirming that probabilities are preserved. In Dirac notation: $|\psi(t)\rangle = U(t)|\psi(0)\rangle$. The entire dynamics is a single operator application.
+</p>
+
+<h2 class="section-break">The Architecture</h2>
+
+<p>
+  Step back and look at the entire structure. States are kets in a Hilbert space. Observables are Hermitian operators with real eigenvalues. Physical transformations are unitary operators that preserve inner products. Measurement is projection. The wavefunction is an inner product with position eigenstates. The Fourier transform is a change of basis. The uncertainty principle is Cauchy-Schwarz. Completeness lets you insert the identity to change between any two bases.
+</p>
+
+<p>
+  Every concept connects to every other through the inner product. The probability of a measurement outcome is $|\langle\text{outcome}|\psi\rangle|^2$. The expectation value of an observable is $\langle\psi|\hat{A}|\psi\rangle$. The transition amplitude is $\langle\text{final}|U|\text{initial}\rangle$. The density matrix is $\rho = |\psi\rangle\langle\psi|$. The entire theory reduces to three things: vectors, inner products, and linear operators.
+</p>
+
+<p>
+  Dirac notation doesn't just describe quantum mechanics. It <em>is</em> quantum mechanics, distilled into its algebraic essence.
 </p>
 
 <p>

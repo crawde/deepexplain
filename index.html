@@ -3,282 +3,254 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DeepExplain — Interactive Deep Dives into Hard Topics</title>
-  <meta name="description" content="Novel-length interactive explainers with live 3D visualizations. Dive deep into quantum mechanics, linear algebra, and more.">
-  <meta property="og:title" content="DeepExplain — Interactive Deep Dives into Hard Topics">
-  <meta property="og:description" content="Novel-length interactive explainers with live 3D and 2D visualizations. No fluff, just deep understanding.">
+  <title>DeepExplain — Interactive long-form explainers</title>
+  <meta name="description" content="Deep, interactive explorations of hard topics. No fluff, no hand-waving — just rigorous explanations with live visualizations.">
+  <link rel="canonical" href="https://deepexplain.dev">
+  <meta property="og:title" content="DeepExplain — Interactive long-form explainers">
+  <meta property="og:description" content="Deep, interactive explorations of hard topics. Live visualizations, 3D scenes, and exercises.">
+  <meta property="og:url" content="https://deepexplain.dev">
   <meta property="og:type" content="website">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a18'/%3E%3Ctext x='16' y='24' text-anchor='middle' font-family='serif' font-size='22' font-weight='bold' fill='%234fc3f7'%3E%E2%9F%A8%E2%9F%A9%3C/text%3E%3C/svg%3E">
-  <link rel="canonical" href="https://deepexplain.dev/">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔬</text></svg>">
   <style>
-    /* Landing-specific styles */
-    #particle-canvas {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      z-index: 0;
-      pointer-events: none;
+    @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html{font-size:16px}
+    body{
+      background:#06060e;
+      color:#c8c8d4;
+      font-family:'Source Serif 4','Georgia',serif;
+      min-height:100vh;
+      overflow-x:hidden;
     }
-    .home {
-      position: relative;
-      z-index: 1;
-      max-width: 700px;
-      margin: 0 auto;
-      padding: 0 1.5rem;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+
+    /* Canvas background */
+    #bg-canvas{
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      z-index:0;pointer-events:none;
     }
-    .hero-mark {
-      text-align: center;
-      margin-bottom: 4rem;
-      padding-top: 3rem;
+
+    .page{position:relative;z-index:1}
+
+    /* Header */
+    header{
+      text-align:center;
+      padding:12vh 2rem 6vh;
     }
-    .logo-icon {
-      display: block;
-      margin: 0 auto 1.2rem;
-      width: 80px;
-      height: 80px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, rgba(79,195,247,0.12) 0%, rgba(230,140,216,0.08) 100%);
-      border: 1px solid rgba(79,195,247,0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 42px;
-      font-family: serif;
-      color: #4fc3f7;
-      text-shadow: 0 0 20px rgba(79,195,247,0.4);
-      animation: logoPulse 3s ease-in-out infinite;
+    header .logo{
+      font-family:'JetBrains Mono',monospace;
+      font-size:.85rem;
+      letter-spacing:.35em;
+      text-transform:uppercase;
+      color:#5c9ce6;
+      margin-bottom:1.5rem;
+      opacity:.7;
     }
-    @keyframes logoPulse {
-      0%, 100% { box-shadow: 0 0 30px rgba(79,195,247,0.1); }
-      50% { box-shadow: 0 0 50px rgba(79,195,247,0.2); }
+    header h1{
+      font-family:'Source Serif 4',serif;
+      font-size:clamp(2rem,5vw,3.5rem);
+      font-weight:600;
+      color:#e8e8f0;
+      line-height:1.2;
+      margin-bottom:1rem;
     }
-    .logo-text {
-      font-size: 2.8rem;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      background: linear-gradient(135deg, #4fc3f7 0%, #e68cd8 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 0.5rem;
+    header h1 span{
+      background:linear-gradient(135deg,#5c9ce6,#e68cd8);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
     }
-    .tagline {
-      color: #556;
-      font-size: 1.05rem;
-      line-height: 1.6;
-      max-width: 500px;
-      margin: 0 auto;
+    header p{
+      font-size:1.15rem;
+      line-height:1.7;
+      color:#8888a0;
+      max-width:600px;
+      margin:0 auto;
+      font-style:italic;
     }
-    .article-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
+
+    /* Articles grid */
+    .articles{
+      max-width:720px;
+      margin:4vh auto 10vh;
+      padding:0 2rem;
     }
-    .article-card {
-      display: block;
-      text-decoration: none;
-      background: #0e0e18;
-      border: 1px solid #1c1c30;
-      border-radius: 12px;
-      padding: 1.6rem 1.8rem;
-      transition: all 0.25s ease;
+    .articles h2{
+      font-family:'Inter',sans-serif;
+      font-size:.7rem;
+      letter-spacing:.3em;
+      text-transform:uppercase;
+      color:#444460;
+      margin-bottom:2rem;
     }
-    .article-card:hover {
-      border-color: #4fc3f7;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(79,195,247,0.08);
+
+    .card{
+      display:block;
+      text-decoration:none;
+      padding:2rem 2.5rem;
+      border:1px solid #12121f;
+      border-radius:12px;
+      margin-bottom:1.5rem;
+      transition:border-color .4s,box-shadow .4s,transform .3s;
+      background:rgba(8,8,18,0.6);
+      backdrop-filter:blur(10px);
     }
-    .article-card.coming-soon {
-      opacity: 0.35;
-      pointer-events: none;
+    .card:hover{
+      border-color:#1a2040;
+      box-shadow:0 0 40px rgba(92,156,230,0.04);
+      transform:translateY(-2px);
     }
-    .card-meta {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #4fc3f7;
-      margin-bottom: 0.4rem;
+    .card-tag{
+      font-family:'JetBrains Mono',monospace;
+      font-size:.65rem;
+      letter-spacing:.2em;
+      text-transform:uppercase;
+      color:#5c9ce6;
+      opacity:.6;
+      margin-bottom:.5rem;
     }
-    .card-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #e0ddd6;
-      margin-bottom: 0.4rem;
+    .card h3{
+      font-family:'Source Serif 4',serif;
+      font-size:1.3rem;
+      font-weight:600;
+      color:#d8d8e4;
+      margin-bottom:.5rem;
     }
-    .card-desc {
-      font-size: 0.9rem;
-      color: #778;
-      line-height: 1.5;
+    .card p{
+      font-size:.95rem;
+      line-height:1.6;
+      color:#777790;
     }
-    .home-footer {
-      text-align: center;
-      margin-top: 5rem;
-      padding-bottom: 3rem;
-      color: #334;
-      font-size: 0.85rem;
+    .card-meta{
+      font-family:'Inter',sans-serif;
+      font-size:.7rem;
+      color:#444460;
+      margin-top:.8rem;
     }
-    .home-footer a {
-      color: #445;
-      text-decoration: none;
+    .card-meta span{margin-right:1.2rem}
+
+    /* Footer */
+    footer{
+      text-align:center;
+      padding:4rem 2rem 3rem;
+      border-top:1px solid #0e0e1a;
     }
-    .stats {
-      display: flex;
-      justify-content: center;
-      gap: 2.5rem;
-      margin-top: 2rem;
-      margin-bottom: 3rem;
-    }
-    .stat {
-      text-align: center;
-    }
-    .stat-num {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: #4fc3f7;
-      text-shadow: 0 0 20px rgba(79,195,247,0.3);
-    }
-    .stat-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #445;
-      margin-top: 0.2rem;
+    footer p{
+      font-family:'Inter',sans-serif;
+      font-size:.7rem;
+      color:#333348;
+      letter-spacing:.15em;
     }
   </style>
 </head>
 <body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="page">
+    <header>
+      <div class="logo">DeepExplain</div>
+      <h1>Interactive <span>long-form</span> explainers</h1>
+      <p>Deep, rigorous explorations of hard topics — with live 3D visualizations, interactive controls, and exercises. No fluff.</p>
+    </header>
 
-<canvas id="particle-canvas"></canvas>
+    <section class="articles">
+      <h2>Explorations</h2>
 
-<div class="home">
-  <div class="hero-mark">
-    <div class="logo-icon">⟨⟩</div>
-    <h1 class="logo-text">DeepExplain</h1>
-    <p class="tagline">Novel-length interactive explainers with live 3D visualizations.<br>No fluff. Just deep understanding.</p>
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-num">8</div>
-        <div class="stat-label">Visualizations</div>
+      <a href="/dirac-notation/" class="card">
+        <div class="card-tag">Quantum Mechanics</div>
+        <h3>Dirac Notation — End to End</h3>
+        <p>From kets and bras to Fourier transforms and the uncertainty principle. Interactive Bloch sphere, live inner products, operator actions, and 8 exercises.</p>
+        <div class="card-meta">
+          <span>~45 min read</span>
+          <span>10 interactive visualizations</span>
+          <span>3 × 3D scenes</span>
+        </div>
+      </a>
+
+      <div class="card" style="opacity:0.35;pointer-events:none;">
+        <div class="card-tag">Coming Soon</div>
+        <h3>Tensor Products & Entanglement</h3>
+        <p>Multi-qubit systems, Bell states, density matrices, and the EPR paradox — all visualized.</p>
+        <div class="card-meta"><span>In development</span></div>
       </div>
-      <div class="stat">
-        <div class="stat-num">3D</div>
-        <div class="stat-label">Bloch Sphere</div>
+
+      <div class="card" style="opacity:0.25;pointer-events:none;">
+        <div class="card-tag">Coming Soon</div>
+        <h3>Path Integrals — Feynman's Way</h3>
+        <p>The sum-over-histories formulation from scratch, with interactive path animations.</p>
+        <div class="card-meta"><span>Planned</span></div>
       </div>
-      <div class="stat">
-        <div class="stat-num">8</div>
-        <div class="stat-label">Exercises</div>
-      </div>
-    </div>
+    </section>
+
+    <footer>
+      <p>DEEPEXPLAIN — BUILT FOR CURIOSITY</p>
+    </footer>
   </div>
 
-  <div class="article-list">
-    <a href="dirac-notation/" class="article-card">
-      <div class="card-meta">Quantum Mechanics · Interactive</div>
-      <div class="card-title">Dirac Notation — The Complete Guide</div>
-      <div class="card-desc">Kets, bras, inner products, operators, projections, wavefunctions, Fourier transforms, and the uncertainty principle. With a live 3D Bloch sphere and 8 interactive D3 visualizations.</div>
-    </a>
-    <div class="article-card coming-soon">
-      <div class="card-meta">Linear Algebra · Coming Soon</div>
-      <div class="card-title">Eigenvalues & Eigenvectors — Geometrically</div>
-      <div class="card-desc">See what eigendecomposition actually does to space. Interactive matrix transformations, spectral decomposition, and why it all matters.</div>
-    </div>
-    <div class="article-card coming-soon">
-      <div class="card-meta">Information Theory · Coming Soon</div>
-      <div class="card-title">Entropy — From Shannon to Von Neumann</div>
-      <div class="card-desc">What information actually is, why bits are logarithms, and how quantum mechanics extends everything. Interactive coding demonstrations.</div>
-    </div>
-  </div>
+  <script>
+    // Particle background
+    const c = document.getElementById('bg-canvas');
+    const ctx = c.getContext('2d');
+    let W, H, particles = [];
+    const N = 80;
 
-  <div class="home-footer">
-    <p>DeepExplain — <a href="https://github.com/crawde/deepexplain">open source</a></p>
-  </div>
-</div>
+    function resize() {
+      W = c.width = window.innerWidth;
+      H = c.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
 
-<script>
-// Animated particle background
-(function() {
-  const canvas = document.getElementById('particle-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-
-  let W, H;
-  function resize() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  const particles = [];
-  const N = 120;
-
-  for (let i = 0; i < N; i++) {
-    particles.push({
-      x: Math.random() * W,
-      y: Math.random() * H,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      r: Math.random() * 1.5 + 0.5,
-      phase: Math.random() * Math.PI * 2
-    });
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    const t = Date.now() * 0.001;
-
-    // Update & draw particles
-    for (const p of particles) {
-      p.x += p.vx;
-      p.y += p.vy;
-      if (p.x < 0) p.x = W;
-      if (p.x > W) p.x = 0;
-      if (p.y < 0) p.y = H;
-      if (p.y > H) p.y = 0;
-
-      const alpha = 0.15 + 0.1 * Math.sin(t + p.phase);
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(79, 195, 247, ${alpha})`;
-      ctx.fill();
+    for (let i = 0; i < N; i++) {
+      particles.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.15,
+        vy: (Math.random() - 0.5) * 0.15,
+        r: Math.random() * 1.5 + 0.3,
+        o: Math.random() * 0.12 + 0.02
+      });
     }
 
-    // Draw connections
-    for (let i = 0; i < N; i++) {
-      for (let j = i + 1; j < N; j++) {
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 150) {
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(79, 195, 247, ${0.04 * (1 - dist / 150)})`;
-          ctx.lineWidth = 0.5;
-          ctx.stroke();
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      for (let i = 0; i < N; i++) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = W;
+        if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H;
+        if (p.y > H) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(92,156,230,${p.o})`;
+        ctx.fill();
+        // Connect nearby
+        for (let j = i + 1; j < N; j++) {
+          const q = particles[j];
+          const dx = p.x - q.x, dy = p.y - q.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(q.x, q.y);
+            ctx.strokeStyle = `rgba(92,156,230,${0.03 * (1 - dist / 150)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
         }
       }
+      requestAnimationFrame(draw);
     }
+    draw();
+  </script>
 
-    requestAnimationFrame(draw);
-  }
-  draw();
-})();
-</script>
-
-<!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-XXXXXXXXXX');
-</script>
-
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PLACEHOLDER"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-PLACEHOLDER');
+  </script>
 </body>
 </html>

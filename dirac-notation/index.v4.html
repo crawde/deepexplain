@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dirac Notation — The Complete Interactive Guide | DeepExplain</title>
+  <meta name="description" content="A novel-length interactive explainer on Dirac notation in quantum mechanics, with live 3D and 2D visualizations at every step.">
+  <meta property="og:title" content="Dirac Notation — The Complete Interactive Guide">
+  <meta property="og:description" content="Interactive explainer covering bra-ket notation end to end, with 3D Bloch sphere, D3.js visualizations, and exercises.">
+  <meta property="og:type" content="article">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a18'/%3E%3Ctext x='16' y='24' text-anchor='middle' font-family='serif' font-size='22' font-weight='bold' fill='%234fc3f7'%3E%E2%9F%A8%E2%9F%A9%3C/text%3E%3C/svg%3E">
+  <link rel="canonical" href="https://deepexplain.dev/dirac-notation/">
+
+  <!-- KaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+  <!-- D3.js -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+
+  <!-- Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="../" class="nav-home">
+    <span class="nav-logo">⟨ ⟩</span>
+    <span>Deep<span class="accent">Explain</span></span>
+  </a>
+  <span class="nav-sep">·</span>
+  <span class="nav-current">Dirac Notation</span>
+</nav>
+
+<!-- ─── HERO: Full-width animated Bloch sphere ─── -->
+<div class="hero-scene" id="bloch-hero">
+  <canvas id="bloch-canvas"></canvas>
+  <div class="hero-overlay">
+    <div class="hero-title-wrap">
+      <h1 class="hero-title">Every quantum state is a point on this sphere.</h1>
+      <p class="hero-sub">Drag it. The math will follow.</p>
+    </div>
+  </div>
+  <div class="hero-state" id="bloch-state-readout">
+    <span class="hero-ket" id="hero-ket">|ψ⟩ = |0⟩</span>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-arrow"></div>
+  </div>
+</div>
+
+<main>
+
+<p>
+  That sphere you just played with is the Bloch sphere — a map of every possible state of a two-level quantum system. North pole: $|0\rangle$. South pole: $|1\rangle$. Every point on the surface is a superposition. Every rotation is an operation. Every measurement is a projection onto an axis.
+</p>
+
+<p>
+  Paul Dirac invented a notation that makes all of this algebra effortless. It looks like this: $|\psi\rangle = \alpha|0\rangle + \beta|1\rangle$, where $\alpha$ and $\beta$ are complex numbers satisfying $|\alpha|^2 + |\beta|^2 = 1$. The vertical bar and angle bracket — $|\ \rangle$ — is called a <em>ket</em>. It represents a quantum state as a vector. The notation isn't decoration; it's machinery. Let's build intuition for it piece by piece, with interactive tools at every step.
+</p>
+
+<p>
+  The two complex amplitudes $\alpha$ and $\beta$ encode everything about the state. You can parameterize them with two real angles — $\theta$ and $\phi$ — via $\alpha = \cos(\theta/2)$ and $\beta = e^{i\phi}\sin(\theta/2)$. Drag the sliders and watch:
+</p>
+
+<!-- KET BUILDER -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Interactive · Build a Quantum State</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>θ (polar) <span class="val" id="theta-val">π/4</span></label>
+      <input type="range" id="theta-slider" min="0" max="314" value="78">
+    </div>
+    <div class="ctrl">
+      <label>φ (azimuthal) <span class="val" id="phi-val">0</span></label>
+      <input type="range" id="phi-slider" min="0" max="628" value="0">
+    </div>
+  </div>
+  <div class="state-readout" id="ket-state-display"></div>
+  <div class="readout" id="ket-output"></div>
+</div>
+
+<p>
+  Watch $\theta$ first. When $\theta = 0$, the state is pure $|0\rangle$ — probability 1 at the top. When $\theta = \pi$, it's pure $|1\rangle$. At $\theta = \pi/2$, the probabilities split evenly: 50% each. The polar angle controls the <em>balance of probability</em>.
+</p>
+
+<p>
+  Now look at $\phi$. Drag it while keeping $\theta$ fixed at $\pi/2$. The probabilities don't change — still 50/50. But the amplitudes change: $\beta$ picks up a complex phase $e^{i\phi}$. When $\phi = 0$, the state is $\frac{1}{\sqrt{2}}(|0\rangle + |1\rangle)$. When $\phi = \pi$, it becomes $\frac{1}{\sqrt{2}}(|0\rangle - |1\rangle)$. Same probabilities, completely different states. The phase $\phi$ — the <em>relative phase</em> — determines interference. It's invisible to a $|0\rangle/|1\rangle$ measurement but shows up when you measure in a different basis. Probabilities alone don't define a state. You need complex amplitudes.
+</p>
+
+<p>
+  A global phase $e^{i\gamma}|\psi\rangle$ changes nothing physical — $|e^{i\gamma}\alpha|^2 = |\alpha|^2$. That's why we put all phase into $e^{i\phi}$ on $\beta$. Technically, quantum states are rays in Hilbert space, not vectors. The notation handles this: $|\psi\rangle$ and $e^{i\gamma}|\psi\rangle$ represent the same physical state.
+</p>
+
+<p>
+  The space these vectors inhabit is a <em>Hilbert space</em>: a vector space with an inner product that is complete. For a qubit, it's $\mathbb{C}^2$. For a particle on a line, it's $L^2(\mathbb{R})$ — infinite-dimensional. The notation works identically regardless. Why complex numbers? Because they're the smallest number field that allows interference — $|\alpha + \beta|$ can be less than $|\alpha| + |\beta|$ when phases partly cancel. Destructive interference is impossible with positive reals.
+</p>
+
+<p>
+  Every ket has a partner: the <em>bra</em> $\langle\psi|$. If $|\psi\rangle = \alpha|0\rangle + \beta|1\rangle$, then $\langle\psi| = \alpha^*\langle 0| + \beta^*\langle 1|$ — the conjugate transpose. The bracket $\langle\phi|\psi\rangle$ is the <em>inner product</em>, measuring overlap. Born's rule: $|\langle\phi|\psi\rangle|^2$ is the probability of finding $|\psi\rangle$ in state $|\phi\rangle$. Two states are orthogonal when $\langle\phi|\psi\rangle = 0$. Drag the vectors and watch the overlap:
+</p>
+
+<!-- INNER PRODUCT -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Interactive · Inner Product & Overlap</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>|ψ⟩ angle <span class="val" id="psi-angle-val">0°</span></label>
+      <input type="range" id="psi-angle" min="0" max="360" value="0">
+    </div>
+    <div class="ctrl">
+      <label>|φ⟩ angle <span class="val" id="phi-angle-val">90°</span></label>
+      <input type="range" id="phi-angle" min="0" max="360" value="90">
+    </div>
+  </div>
+  <div class="viz" id="inner-product-viz" style="height:300px;"></div>
+  <div class="readout" id="inner-product-output"></div>
+</div>
+
+<p>
+  At 90° apart, the inner product is exactly zero — orthogonal, perfectly distinguishable. At the same angle, it's 1 — normalization, certainty. The green dashed line shows $|\langle\phi|\psi\rangle|$ geometrically as a projection.
+</p>
+
+<p>
+  Write the symbols in reverse: $|\phi\rangle\langle\psi|$ is an <em>operator</em>, not a number. When $|\phi\rangle = |\psi\rangle$, you get the <em>projection operator</em> $P_\psi = |\psi\rangle\langle\psi|$ — it casts the shadow of any state onto $|\psi\rangle$. Two key properties: $P^2 = P$ (projecting twice = projecting once) and $P^\dagger = P$ (Hermitian). Measurement <em>is</em> projection:
+</p>
+
+<!-- PROJECTION -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Interactive · Projection Operator</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>|ψ⟩ direction <span class="val" id="proj-psi-val">45°</span></label>
+      <input type="range" id="proj-psi-angle" min="0" max="360" value="45">
+    </div>
+    <div class="ctrl">
+      <label>|χ⟩ direction <span class="val" id="proj-chi-val">120°</span></label>
+      <input type="range" id="proj-chi-angle" min="0" max="360" value="120">
+    </div>
+  </div>
+  <div class="viz" id="projection-viz" style="height:300px;"></div>
+  <div class="readout" id="projection-output"></div>
+</div>
+
+<p>
+  Observables are Hermitian operators with real eigenvalues. The most important qubit operators are the Pauli matrices: $\sigma_x$ flips ($|0\rangle \leftrightarrow |1\rangle$), $\sigma_z$ phases ($|1\rangle \to -|1\rangle$), $\sigma_y$ combines both. The Hadamard $H$ creates superpositions. See each transform a state vector:
+</p>
+
+<!-- OPERATOR ACTION -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Interactive · Operator Transformations</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>Input θ <span class="val" id="op-theta-val">π/4</span></label>
+      <input type="range" id="op-theta" min="0" max="314" value="78">
+    </div>
+    <div class="btn-row">
+      <button class="btn active" data-op="I">I</button>
+      <button class="btn" data-op="X">σ_x</button>
+      <button class="btn" data-op="Y">σ_y</button>
+      <button class="btn" data-op="Z">σ_z</button>
+      <button class="btn" data-op="H">H</button>
+    </div>
+  </div>
+  <div class="viz" id="operator-viz" style="height:300px;"></div>
+  <div class="readout" id="operator-output"></div>
+</div>
+
+<p>
+  The completeness relation $\sum_n |n\rangle\langle n| = \hat{I}$ is the most powerful identity in QM. Insert it anywhere to change basis. The transformation matrix $U_{mn} = \langle m'|n\rangle$ is unitary, preserving probabilities. Watch components change while the state stays fixed:
+</p>
+
+<!-- BASIS CHANGE -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Interactive · Change of Basis</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>State θ <span class="val" id="basis-state-val">60°</span></label>
+      <input type="range" id="basis-state-angle" min="0" max="360" value="60">
+    </div>
+    <div class="ctrl">
+      <label>Basis rotation <span class="val" id="basis-rot-val">30°</span></label>
+      <input type="range" id="basis-rot-angle" min="0" max="180" value="30">
+    </div>
+  </div>
+  <div class="viz" id="basis-change-viz" style="height:340px;"></div>
+  <div class="readout" id="basis-change-output"></div>
+</div>
+
+<p>
+  Now infinite dimensions: a particle on a line. The wavefunction $\psi(x) = \langle x|\psi\rangle$ is just a basis expansion. Probability density: $|\psi(x)|^2$. Explore different shapes:
+</p>
+
+<!-- WAVEFUNCTION -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Interactive · Wavefunctions in Position Space</div>
+  <div class="controls">
+    <div class="btn-row">
+      <button class="btn active" data-wf="gaussian">Gaussian</button>
+      <button class="btn" data-wf="plane-wave">Plane wave</button>
+      <button class="btn" data-wf="superposition">Superposition</button>
+      <button class="btn" data-wf="box">Infinite well</button>
+    </div>
+    <div class="ctrl">
+      <label>Width / wavelength <span class="val" id="wf-param-val">1.0</span></label>
+      <input type="range" id="wf-param" min="20" max="300" value="100">
+    </div>
+    <div class="ctrl">
+      <label>Center / momentum <span class="val" id="wf-center-val">0.0</span></label>
+      <input type="range" id="wf-center" min="0" max="200" value="100">
+    </div>
+  </div>
+  <div class="viz" id="wavefunction-viz" style="height:280px;"></div>
+  <div class="readout" id="wavefunction-output"></div>
+</div>
+
+<p>
+  Switching to momentum space is a Fourier transform — derived from inserting completeness. A narrow $\psi(x)$ gives a wide $\tilde{\psi}(p)$, and vice versa. The product $\Delta x \cdot \Delta p$ never drops below $\hbar/2$:
+</p>
+
+<!-- FOURIER -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Interactive · Fourier Duality — Position ↔ Momentum</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>Position width σ_x <span class="val" id="fourier-sigma-val">1.0</span></label>
+      <input type="range" id="fourier-sigma" min="10" max="300" value="100">
+    </div>
+    <div class="ctrl">
+      <label>Center momentum k₀ <span class="val" id="fourier-k0-val">0</span></label>
+      <input type="range" id="fourier-k0" min="0" max="200" value="100">
+    </div>
+  </div>
+  <div class="viz" id="fourier-viz" style="height:400px;"></div>
+  <div class="readout" id="fourier-output"></div>
+</div>
+
+<p>
+  The uncertainty principle $\Delta A \cdot \Delta B \geq \frac{1}{2}|\langle[\hat{A},\hat{B}]\rangle|$ follows from Cauchy-Schwarz. For $[\hat{x},\hat{p}] = i\hbar$, you get $\Delta x \cdot \Delta p \geq \hbar/2$. The Gaussian saturates this bound:
+</p>
+
+<!-- UNCERTAINTY -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Interactive · The Uncertainty Principle</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>Position uncertainty Δx <span class="val" id="uncert-dx-val">1.0</span></label>
+      <input type="range" id="uncert-dx" min="10" max="300" value="100">
+    </div>
+  </div>
+  <div class="viz" id="uncertainty-viz" style="height:280px;"></div>
+  <div class="readout" id="uncertainty-output"></div>
+</div>
+
+<p>
+  Time evolution: $|\psi(t)\rangle = \sum_n c_n e^{-iE_n t/\hbar}|E_n\rangle$ — each energy eigenstate getting a rotating phase. The architecture is stunningly coherent — states are kets, observables are Hermitian operators, transformations are unitary, completeness lets you change basis, the wavefunction is an inner product, the Fourier transform is a basis change, and the uncertainty principle is Cauchy-Schwarz.
+</p>
+
+<p>
+  Test your understanding:
+</p>
+
+<!-- EXERCISES -->
+<div class="exercises">
+  <div class="exercise">
+    <p>Compute $\langle +|-\rangle$ where $|+\rangle = \frac{1}{\sqrt{2}}(|0\rangle+|1\rangle)$ and $|-\rangle = \frac{1}{\sqrt{2}}(|0\rangle-|1\rangle)$.</p>
+    <input type="text" id="ex1-answer" placeholder="Your answer">
+    <button class="btn" onclick="checkExercise(1)">Check</button>
+    <div class="feedback" id="ex1-feedback"></div>
+  </div>
+  <div class="exercise">
+    <p>If $|\psi\rangle = \frac{1}{\sqrt{3}}|0\rangle + \sqrt{\frac{2}{3}}|1\rangle$, what is $|\langle 0|\psi\rangle|^2$?</p>
+    <input type="text" id="ex2-answer" placeholder="Your answer">
+    <button class="btn" onclick="checkExercise(2)">Check</button>
+    <div class="feedback" id="ex2-feedback"></div>
+  </div>
+  <div class="exercise">
+    <p>What is $\hat{\sigma}_z|+\rangle$? Express as a linear combination of $|0\rangle$ and $|1\rangle$.</p>
+    <input type="text" id="ex3-answer" placeholder="e.g. (1/√2)(|0⟩-|1⟩)">
+    <button class="btn" onclick="checkExercise(3)">Check</button>
+    <div class="feedback" id="ex3-feedback"></div>
+  </div>
+  <div class="exercise">
+    <p>For a Gaussian with $\Delta x = 2$, what is the minimum $\Delta p$? ($\hbar=1$)</p>
+    <input type="text" id="ex4-answer" placeholder="Your answer">
+    <button class="btn" onclick="checkExercise(4)">Check</button>
+    <div class="feedback" id="ex4-feedback"></div>
+  </div>
+  <div class="exercise">
+    <p>Show $P = |+\rangle\langle +|$ is idempotent: $P^2 = $ ?</p>
+    <input type="text" id="ex5-answer" placeholder="Your answer">
+    <button class="btn" onclick="checkExercise(5)">Check</button>
+    <div class="feedback" id="ex5-feedback"></div>
+  </div>
+  <div class="exercise">
+    <p>$\langle 0|\sigma_x|0\rangle = $ ?</p>
+    <input type="text" id="ex6-answer" placeholder="Your answer">
+    <button class="btn" onclick="checkExercise(6)">Check</button>
+    <div class="feedback" id="ex6-feedback"></div>
+  </div>
+  <div class="exercise">
+    <p>If $|\psi\rangle = \frac{1}{\sqrt{2}}|0\rangle + \frac{i}{\sqrt{2}}|1\rangle$, what is $|\langle +|\psi\rangle|^2$?</p>
+    <input type="text" id="ex7-answer" placeholder="Your answer">
+    <button class="btn" onclick="checkExercise(7)">Check</button>
+    <div class="feedback" id="ex7-feedback"></div>
+  </div>
+  <div class="exercise">
+    <p>$[\sigma_x, \sigma_z] = c \cdot \sigma_y$. Find $c$.</p>
+    <input type="text" id="ex8-answer" placeholder="e.g. 2i or -2i">
+    <button class="btn" onclick="checkExercise(8)">Check</button>
+    <div class="feedback" id="ex8-feedback"></div>
+  </div>
+</div>
+
+<p class="closing">
+  <a href="../">DeepExplain</a> · Built with Three.js, D3.js, and KaTeX
+</p>
+
+</main>
+
+<script src="../js/visualizations.js"></script>
+
+</body>
+</html>

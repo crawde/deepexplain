@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeepExplain — Interactive Deep Dives into Hard Topics</title>
+  <meta name="description" content="Novel-length interactive explainers with live 3D visualizations. Dive deep into quantum mechanics, linear algebra, and more.">
+  <meta property="og:title" content="DeepExplain — Interactive Deep Dives into Hard Topics">
+  <meta property="og:description" content="Novel-length interactive explainers with live 3D and 2D visualizations. No fluff, just deep understanding.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a18'/%3E%3Ctext x='16' y='24' text-anchor='middle' font-family='serif' font-size='22' font-weight='bold' fill='%234fc3f7'%3E%E2%9F%A8%E2%9F%A9%3C/text%3E%3C/svg%3E">
+  <link rel="canonical" href="https://deepexplain.dev/">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Landing-specific styles */
+    #particle-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .home {
+      position: relative;
+      z-index: 1;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .hero-mark {
+      text-align: center;
+      margin-bottom: 4rem;
+      padding-top: 3rem;
+    }
+    .logo-icon {
+      display: block;
+      margin: 0 auto 1.2rem;
+      width: 80px;
+      height: 80px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(79,195,247,0.12) 0%, rgba(230,140,216,0.08) 100%);
+      border: 1px solid rgba(79,195,247,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      font-family: serif;
+      color: #4fc3f7;
+      text-shadow: 0 0 20px rgba(79,195,247,0.4);
+      animation: logoPulse 3s ease-in-out infinite;
+    }
+    @keyframes logoPulse {
+      0%, 100% { box-shadow: 0 0 30px rgba(79,195,247,0.1); }
+      50% { box-shadow: 0 0 50px rgba(79,195,247,0.2); }
+    }
+    .logo-text {
+      font-size: 2.8rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #4fc3f7 0%, #e68cd8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    .tagline {
+      color: #556;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .article-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .article-card {
+      display: block;
+      text-decoration: none;
+      background: #0e0e18;
+      border: 1px solid #1c1c30;
+      border-radius: 12px;
+      padding: 1.6rem 1.8rem;
+      transition: all 0.25s ease;
+    }
+    .article-card:hover {
+      border-color: #4fc3f7;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(79,195,247,0.08);
+    }
+    .article-card.coming-soon {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+    .card-meta {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #4fc3f7;
+      margin-bottom: 0.4rem;
+    }
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #e0ddd6;
+      margin-bottom: 0.4rem;
+    }
+    .card-desc {
+      font-size: 0.9rem;
+      color: #778;
+      line-height: 1.5;
+    }
+    .home-footer {
+      text-align: center;
+      margin-top: 5rem;
+      padding-bottom: 3rem;
+      color: #334;
+      font-size: 0.85rem;
+    }
+    .home-footer a {
+      color: #445;
+      text-decoration: none;
+    }
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 2.5rem;
+      margin-top: 2rem;
+      margin-bottom: 3rem;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #4fc3f7;
+      text-shadow: 0 0 20px rgba(79,195,247,0.3);
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #445;
+      margin-top: 0.2rem;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="particle-canvas"></canvas>
+
+<div class="home">
+  <div class="hero-mark">
+    <div class="logo-icon">⟨⟩</div>
+    <h1 class="logo-text">DeepExplain</h1>
+    <p class="tagline">Novel-length interactive explainers with live 3D visualizations.<br>No fluff. Just deep understanding.</p>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num">8</div>
+        <div class="stat-label">Visualizations</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">3D</div>
+        <div class="stat-label">Bloch Sphere</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">8</div>
+        <div class="stat-label">Exercises</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="article-list">
+    <a href="dirac-notation/" class="article-card">
+      <div class="card-meta">Quantum Mechanics · Interactive</div>
+      <div class="card-title">Dirac Notation — The Complete Guide</div>
+      <div class="card-desc">Kets, bras, inner products, operators, projections, wavefunctions, Fourier transforms, and the uncertainty principle. With a live 3D Bloch sphere and 8 interactive D3 visualizations.</div>
+    </a>
+    <div class="article-card coming-soon">
+      <div class="card-meta">Linear Algebra · Coming Soon</div>
+      <div class="card-title">Eigenvalues & Eigenvectors — Geometrically</div>
+      <div class="card-desc">See what eigendecomposition actually does to space. Interactive matrix transformations, spectral decomposition, and why it all matters.</div>
+    </div>
+    <div class="article-card coming-soon">
+      <div class="card-meta">Information Theory · Coming Soon</div>
+      <div class="card-title">Entropy — From Shannon to Von Neumann</div>
+      <div class="card-desc">What information actually is, why bits are logarithms, and how quantum mechanics extends everything. Interactive coding demonstrations.</div>
+    </div>
+  </div>
+
+  <div class="home-footer">
+    <p>DeepExplain — <a href="https://github.com/crawde/deepexplain">open source</a></p>
+  </div>
+</div>
+
+<script>
+// Animated particle background
+(function() {
+  const canvas = document.getElementById('particle-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  let W, H;
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const particles = [];
+  const N = 120;
+
+  for (let i = 0; i < N; i++) {
+    particles.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      r: Math.random() * 1.5 + 0.5,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const t = Date.now() * 0.001;
+
+    // Update & draw particles
+    for (const p of particles) {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0) p.x = W;
+      if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H;
+      if (p.y > H) p.y = 0;
+
+      const alpha = 0.15 + 0.1 * Math.sin(t + p.phase);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(79, 195, 247, ${alpha})`;
+      ctx.fill();
+    }
+
+    // Draw connections
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 150) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(79, 195, 247, ${0.04 * (1 - dist / 150)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX');
+</script>
+
+</body>
+</html>
