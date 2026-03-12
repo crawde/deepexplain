@@ -96,7 +96,7 @@
 
 <!-- KET BUILDER -->
 <div class="interactive glow-border">
-  <div class="interactive-label">Interactive · Build a Quantum State</div>
+  <div class="interactive-label">Explore · Quantum State Builder</div>
   <div class="controls">
     <div class="ctrl">
       <label>θ (polar) <span class="val" id="theta-val">π/4</span></label>
@@ -127,7 +127,7 @@
 <div class="scene-3d" id="superposition-scene">
   <canvas id="superposition-canvas"></canvas>
   <div class="scene-3d-overlay">
-    <div class="scene-3d-label">3D Interactive · Superposition as Vector Addition</div>
+    <div class="scene-3d-label">3D · Superposition as Vector Addition</div>
     <div class="scene-3d-readout" id="superposition-readout">α|0⟩ + β|1⟩</div>
   </div>
 </div>
@@ -160,7 +160,7 @@
 
 <!-- INNER PRODUCT -->
 <div class="interactive glow-border">
-  <div class="interactive-label">Interactive · Inner Product & Overlap</div>
+  <div class="interactive-label">Explore · Inner Product & Overlap</div>
   <div class="controls">
     <div class="ctrl">
       <label>|ψ⟩ angle <span class="val" id="psi-angle-val">0°</span></label>
@@ -191,7 +191,7 @@
 <div class="scene-3d" id="inner-product-3d-scene">
   <canvas id="inner-product-3d-canvas"></canvas>
   <div class="scene-3d-overlay">
-    <div class="scene-3d-label">3D Interactive · Inner Product as Projection</div>
+    <div class="scene-3d-label">3D · Inner Product as Projection</div>
     <div class="scene-3d-readout" id="inner-product-3d-readout">⟨φ|ψ⟩ = 1.000</div>
   </div>
 </div>
@@ -216,7 +216,7 @@
 
 <!-- PROJECTION -->
 <div class="interactive glow-border">
-  <div class="interactive-label">Interactive · Projection Operator</div>
+  <div class="interactive-label">Explore · Projection Operator</div>
   <div class="controls">
     <div class="ctrl">
       <label>|ψ⟩ direction <span class="val" id="proj-psi-val">45°</span></label>
@@ -271,7 +271,7 @@
 
 <!-- OPERATOR ACTION -->
 <div class="interactive glow-border">
-  <div class="interactive-label">Interactive · Operator Transformations</div>
+  <div class="interactive-label">Explore · Operator Transformations</div>
   <div class="controls">
     <div class="ctrl">
       <label>Input θ <span class="val" id="op-theta-val">π/4</span></label>
@@ -291,6 +291,62 @@
 
 <p>
   Click through each operator and watch how it transforms the blue input vector into the red output vector. With $\sigma_x$, the vector reflects across the equator. With $\sigma_z$, it reflects across the polar axis. The Hadamard $H$ performs a rotation that swaps the $z$-axis and $x$-axis. These are not arbitrary transformations — they are the <em>generators of rotations</em> on the Bloch sphere, and every single-qubit gate is a rotation.
+</p>
+
+<h2 class="section-break">Eigenstates, Eigenvalues, and Why They Matter</h2>
+
+<p>
+  An operator $\hat{A}$ has special states that it merely rescales rather than rotates: $\hat{A}|a\rangle = a|a\rangle$. The state $|a\rangle$ is an <em>eigenstate</em> (or eigenvector) of $\hat{A}$, and $a$ is the corresponding <em>eigenvalue</em>. Measurement of the observable corresponding to $\hat{A}$ can only ever return one of its eigenvalues — this is a postulate of quantum mechanics.
+</p>
+
+<p>
+  Consider $\sigma_z$. Its eigenstates are $|0\rangle$ (eigenvalue $+1$) and $|1\rangle$ (eigenvalue $-1$). When you measure spin along $z$, you get $+1$ or $-1$ — nothing else. Now consider $\sigma_x$. Its eigenstates are the superposition states $|+\rangle = \frac{1}{\sqrt{2}}(|0\rangle + |1\rangle)$ (eigenvalue $+1$) and $|-\rangle = \frac{1}{\sqrt{2}}(|0\rangle - |1\rangle)$ (eigenvalue $-1$). The same physical system, measured along a different axis, has different eigenstates and yields outcomes that look like superpositions in the original basis.
+</p>
+
+<p>
+  The spectral decomposition writes any Hermitian operator as a sum over its eigenvalues and their associated projectors:
+</p>
+
+<p>
+  $$\hat{A} = \sum_n a_n |a_n\rangle\langle a_n|$$
+</p>
+
+<p>
+  This is incredibly powerful. It says the operator is completely determined by where it sends its eigenstates, and that every observable can be thought of as a weighted sum of projections. The identity operator is $\hat{I} = \sum_n |a_n\rangle\langle a_n|$ (all weights equal to 1). The Hamiltonian is $\hat{H} = \sum_n E_n |E_n\rangle\langle E_n|$, projecting onto energy eigenstates with the energy values as weights.
+</p>
+
+<p>
+  Here is a visualization of eigenstates in action. The blue vector is your input state. When you pick an operator, the red output may rotate, flip, or stay put — but an eigenstate of that operator will only ever get scaled (stretched or flipped) by the eigenvalue. Watch the blue dot land exactly on the eigenstate directions and the readout show the eigenvalue:
+</p>
+
+<!-- EIGENSTATES -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Explore · Eigenstates & Eigenvalues</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>Input angle θ <span class="val" id="eigen-theta-val">π/4</span></label>
+      <input type="range" id="eigen-theta" min="0" max="628" value="157">
+    </div>
+    <div class="btn-row">
+      <button class="btn active" data-eigen="Z">σ_z</button>
+      <button class="btn" data-eigen="X">σ_x</button>
+      <button class="btn" data-eigen="H">H</button>
+    </div>
+  </div>
+  <div class="viz" id="eigen-viz" style="height:300px;"></div>
+  <div class="readout" id="eigen-output"></div>
+</div>
+
+<div class="aside-note">
+  <strong>Complex inner products:</strong> In general, $\langle\phi|\psi\rangle$ produces a <em>complex number</em>, not a real one. For real-valued state vectors, the inner product reduces to the familiar dot product. But when relative phases are present — as they always are in real quantum systems — the complex conjugation in $\langle\phi| = |\phi\rangle^\dagger$ becomes essential. The probability $|\langle\phi|\psi\rangle|^2$ is always real and non-negative, but the underlying amplitude carries phase information that determines interference patterns.
+</div>
+
+<p>
+  The operators in Dirac notation look like this in practice. Take $\hat{A} = |0\rangle\langle 1|$. Applied to $|1\rangle$: $\hat{A}|1\rangle = |0\rangle\langle 1|1\rangle = |0\rangle \cdot 1 = |0\rangle$. Applied to $|0\rangle$: $\hat{A}|0\rangle = |0\rangle\langle 1|0\rangle = |0\rangle \cdot 0 = 0$. The operator $|0\rangle\langle 1|$ is a "transition operator" — it maps $|1\rangle$ to $|0\rangle$ and annihilates $|0\rangle$. The Pauli-X gate is the sum $|0\rangle\langle 1| + |1\rangle\langle 0|$ — it swaps both ways.
+</p>
+
+<p>
+  Two operators are said to <em>commute</em> if $[\hat{A},\hat{B}] = \hat{A}\hat{B} - \hat{B}\hat{A} = 0$. Commuting operators share a common set of eigenstates and can be simultaneously diagonalized — physically, they can be measured simultaneously without uncertainty trade-offs. Non-commuting operators (like $\hat{x}$ and $\hat{p}$) cannot, and their commutator directly gives the uncertainty bound.
 </p>
 
 <h2 class="section-break">Completeness and Change of Basis</h2>
@@ -317,7 +373,7 @@
 
 <!-- BASIS CHANGE -->
 <div class="interactive glow-border">
-  <div class="interactive-label">Interactive · Change of Basis</div>
+  <div class="interactive-label">Explore · Change of Basis</div>
   <div class="controls">
     <div class="ctrl">
       <label>State θ <span class="val" id="basis-state-val">60°</span></label>
@@ -368,7 +424,7 @@
 
 <!-- WAVEFUNCTION -->
 <div class="interactive glow-border">
-  <div class="interactive-label">Interactive · Wavefunctions in Position Space</div>
+  <div class="interactive-label">Explore · Wavefunctions in Position Space</div>
   <div class="controls">
     <div class="btn-row">
       <button class="btn active" data-wf="gaussian">Gaussian</button>
@@ -421,7 +477,7 @@
 
 <!-- FOURIER -->
 <div class="interactive glow-border">
-  <div class="interactive-label">Interactive · Fourier Duality — Position ↔ Momentum</div>
+  <div class="interactive-label">Explore · Fourier Duality — Position ↔ Momentum</div>
   <div class="controls">
     <div class="ctrl">
       <label>Position width σ_x <span class="val" id="fourier-sigma-val">1.0</span></label>
@@ -460,7 +516,7 @@
 
 <!-- UNCERTAINTY -->
 <div class="interactive glow-border">
-  <div class="interactive-label">Interactive · The Uncertainty Principle</div>
+  <div class="interactive-label">Explore · The Uncertainty Principle</div>
   <div class="controls">
     <div class="ctrl">
       <label>Position uncertainty Δx <span class="val" id="uncert-dx-val">1.0</span></label>

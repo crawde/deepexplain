@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spherical Harmonics &amp; Legendre Functions — DeepExplain</title>
+  <meta name="description" content="Interactive 3D exploration of spherical harmonics Y_l^m and Legendre functions. Drag, rotate, and build intuition for quantum angular momentum.">
+  <link rel="canonical" href="https://deepexplain.dev/spherical-harmonics/">
+  <meta property="og:title" content="Spherical Harmonics — DeepExplain">
+  <meta property="og:description" content="Interactive 3D visualizations of spherical harmonics and Legendre functions in quantum mechanics.">
+  <meta property="og:url" content="https://deepexplain.dev/spherical-harmonics/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#x1F30D;</text></svg>">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="topnav">
+  <a href="../" class="nav-home">
+    <span class="nav-logo">&#x27E8; &#x27E9;</span>
+    <span>Deep<span class="accent">Explain</span></span>
+  </a>
+  <span class="nav-sep">&#xB7;</span>
+  <span class="nav-current">Spherical Harmonics</span>
+</nav>
+
+<!-- Hero: interactive Y_2^1 surface -->
+<div class="hero-scene" id="sh-hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-overlay">
+    <div class="hero-title-wrap">
+      <h1 class="hero-title">The shapes that nature uses to describe angular momentum.</h1>
+      <p class="hero-sub">Drag to rotate. Pick a harmonic below.</p>
+    </div>
+  </div>
+  <div class="hero-state" id="hero-readout">Y&#x2080;&#x2070;</div>
+  <div class="scroll-hint"><div class="scroll-arrow"></div></div>
+</div>
+
+<!-- Main content -->
+<main>
+
+<p class="lead">Spherical harmonics are the angular part of solutions to Laplace's equation in spherical coordinates. In quantum mechanics, they describe the angular behavior of electron orbitals, gravitational fields, and anything with rotational symmetry.</p>
+
+<p>When you solve the Schr&ouml;dinger equation for a central potential &mdash; like the hydrogen atom &mdash; the wave function naturally separates into a radial piece $R(r)$ and an angular piece $Y_l^m(\theta, \phi)$. These angular functions are the <em>spherical harmonics</em>.</p>
+
+<p>They are classified by two quantum numbers: $l$ (the orbital angular momentum, $l = 0, 1, 2, \ldots$) and $m$ (the magnetic quantum number, $-l \le m \le l$). Together, $(l, m)$ define the &ldquo;shape&rdquo; of the angular probability distribution.</p>
+
+<h2 class="section-break">The Mathematical Definition</h2>
+
+<p>A spherical harmonic is defined as:</p>
+
+$$Y_l^m(\theta, \phi) = \sqrt{\frac{(2l+1)}{4\pi}\frac{(l-m)!}{(l+m)!}} \; P_l^m(\cos\theta) \; e^{im\phi}$$
+
+<p>where $P_l^m$ is the <em>associated Legendre function</em> and $e^{im\phi}$ is the azimuthal phase factor. The square root prefactor is a normalization constant that ensures $\int |Y_l^m|^2 \, d\Omega = 1$.</p>
+
+<p>There are two ingredients to unpack: the <strong>Legendre functions</strong> that handle the polar angle $\theta$, and the <strong>complex exponential</strong> that handles the azimuthal angle $\phi$. Let's start with Legendre.</p>
+
+<h2 class="section-break">Legendre Polynomials $P_l(x)$</h2>
+
+<p>The Legendre polynomials $P_l(x)$ are solutions to Legendre's differential equation on the interval $[-1, 1]$. They emerge naturally when separating variables in Laplace's equation. The first few are:</p>
+
+$$P_0(x) = 1 \qquad P_1(x) = x \qquad P_2(x) = \tfrac{1}{2}(3x^2-1) \qquad P_3(x) = \tfrac{1}{2}(5x^3 - 3x)$$
+
+<p>Each $P_l$ has exactly $l$ zeros in the interval $(-1, 1)$, and they oscillate with increasing frequency as $l$ grows. They are orthogonal under integration: $\int_{-1}^{1} P_l(x) P_{l'}(x) \, dx = \frac{2}{2l+1} \delta_{ll'}$.</p>
+
+<!-- Interactive: Legendre polynomials 2D plot -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Explore &middot; Legendre Polynomials $P_l(x)$</div>
+  <div class="controls">
+    <div class="ctrl" style="min-width:100%">
+      <div class="btn-row" id="legendre-btns">
+        <button class="btn active" data-l="0">P&#x2080;</button>
+        <button class="btn" data-l="1">P&#x2081;</button>
+        <button class="btn" data-l="2">P&#x2082;</button>
+        <button class="btn" data-l="3">P&#x2083;</button>
+        <button class="btn" data-l="4">P&#x2084;</button>
+        <button class="btn" data-l="5">P&#x2085;</button>
+        <button class="btn" data-l="all">All</button>
+      </div>
+    </div>
+  </div>
+  <div class="viz" id="legendre-viz" style="height:320px;"></div>
+  <div class="readout" id="legendre-readout"></div>
+</div>
+
+<p>The key property: Legendre polynomials form a <em>complete orthogonal basis</em> for functions on $[-1, 1]$. Any well-behaved function can be expanded in a Legendre series, analogous to a Fourier series but on the sphere.</p>
+
+<h2 class="section-break">Associated Legendre Functions $P_l^m$</h2>
+
+<p>The associated Legendre functions generalize $P_l$ by introducing the $m$ parameter. They are defined as:</p>
+
+$$P_l^m(x) = (-1)^m (1-x^2)^{m/2} \frac{d^m}{dx^m} P_l(x)$$
+
+<p>The factor $(1 - x^2)^{m/2} = \sin^m\theta$ ensures these functions vanish at the poles when $m \ne 0$. The derivatives create additional oscillations. For $m = 0$, we recover the ordinary Legendre polynomial: $P_l^0(x) = P_l(x)$.</p>
+
+<p>The first few associated Legendre functions (with $x = \cos\theta$):</p>
+
+$$P_1^1 = -\sin\theta \qquad P_2^1 = -3\sin\theta\cos\theta \qquad P_2^2 = 3\sin^2\theta$$
+
+<!-- Interactive: Associated Legendre functions -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Explore &middot; Associated Legendre Functions $P_l^m(\cos\theta)$</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>l <span class="val" id="assoc-l-val">1</span></label>
+      <input type="range" id="assoc-l-slider" min="0" max="5" value="1" step="1">
+    </div>
+    <div class="ctrl">
+      <label>m <span class="val" id="assoc-m-val">0</span></label>
+      <input type="range" id="assoc-m-slider" min="0" max="5" value="0" step="1">
+    </div>
+  </div>
+  <div class="viz" id="assoc-legendre-viz" style="height:320px;"></div>
+  <div class="readout" id="assoc-legendre-readout"></div>
+</div>
+
+<h2 class="section-break">Visualizing Spherical Harmonics in 3D</h2>
+
+<p>Now for the main event. Each spherical harmonic $Y_l^m(\theta, \phi)$ defines a function on the surface of a sphere. To visualize it, we plot $|Y_l^m(\theta,\phi)|$ as the radial distance from the origin &mdash; the resulting surface shows the angular probability distribution.</p>
+
+<p>The real-valued spherical harmonics (used in chemistry for orbital shapes) are formed by taking linear combinations of $Y_l^m$ and $Y_l^{-m}$:</p>
+
+$$Y_{l}^{m,\text{real}} = \begin{cases} \sqrt{2}\,\text{Re}(Y_l^m) & m > 0 \\ Y_l^0 & m = 0 \\ \sqrt{2}\,\text{Im}(Y_l^{|m|}) & m < 0 \end{cases}$$
+
+<p>Select a harmonic below and drag to rotate the 3D surface. Positive lobes are shown in blue, negative in pink.</p>
+
+<!-- Interactive: 3D spherical harmonic selector -->
+<div class="interactive glow-border" id="sh-explorer-container">
+  <div class="interactive-label">Explore &middot; Spherical Harmonics $Y_l^m$</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>l (degree) <span class="val" id="sh-l-val">1</span></label>
+      <input type="range" id="sh-l-slider" min="0" max="4" value="1" step="1">
+    </div>
+    <div class="ctrl">
+      <label>m (order) <span class="val" id="sh-m-val">0</span></label>
+      <input type="range" id="sh-m-slider" min="-4" max="4" value="0" step="1">
+    </div>
+  </div>
+  <div class="state-readout" id="sh-state-display"></div>
+  <div class="viz" id="sh-3d-viz" style="height:420px;position:relative;">
+    <canvas id="sh-canvas" style="width:100%;height:100%;cursor:grab;"></canvas>
+  </div>
+  <div class="readout" id="sh-readout"></div>
+</div>
+
+<h2 class="section-break">The $l = 0$ Harmonic: Perfect Sphere</h2>
+
+<p>The simplest spherical harmonic is $Y_0^0 = \frac{1}{2\sqrt{\pi}}$. It's a constant &mdash; the same value in every direction. The 3D plot is a perfect sphere. This corresponds to the $s$-orbital in chemistry: an electron with zero angular momentum has no preferred direction.</p>
+
+<h2 class="section-break">The $l = 1$ Harmonics: Dipoles</h2>
+
+<p>For $l = 1$ there are three harmonics ($m = -1, 0, +1$). The $m = 0$ case gives:</p>
+
+$$Y_1^0(\theta) = \sqrt{\frac{3}{4\pi}} \cos\theta$$
+
+<p>This is a figure-eight (two lobes) aligned along the $z$-axis &mdash; the $p_z$ orbital. The $m = \pm 1$ harmonics give the $p_x$ and $p_y$ orbitals when combined as real-valued harmonics.</p>
+
+<h2 class="section-break">The $l = 2$ Harmonics: Quadrupoles</h2>
+
+<p>The five $l = 2$ harmonics produce classic shapes: the $d_{z^2}$ orbital (a donut with lobes along $z$), the clover-leaf $d_{xy}$ and $d_{x^2-y^2}$ patterns, and tilted two-lobe shapes for $d_{xz}$ and $d_{yz}$.</p>
+
+$$Y_2^0(\theta) = \sqrt{\frac{5}{16\pi}}(3\cos^2\theta - 1)$$
+
+<!-- 3D scene: side-by-side comparison -->
+<div class="scene-3d" id="gallery-scene">
+  <canvas id="gallery-canvas"></canvas>
+  <div class="scene-3d-overlay">
+    <div class="scene-3d-label">3D &middot; Gallery &mdash; l = 0, 1, 2 harmonics</div>
+    <div class="scene-3d-readout" id="gallery-readout">Y&#x2080;&#x2070; &middot; Y&#x2081;&#x2070; &middot; Y&#x2082;&#x2070;</div>
+  </div>
+</div>
+
+<h2 class="section-break">Associated Legendre Functions in Spherical Coordinates</h2>
+
+<p>To see how $P_l^m(\cos\theta)$ behaves <em>on the sphere</em>, we plot the absolute value as a radial distance at each polar angle $\theta$, holding $\phi$ constant. This gives a 2D &ldquo;polar profile&rdquo; that reveals the nodal structure.</p>
+
+<p>For $m = 0$, the shapes are axially symmetric (zonal harmonics). For $m = l$, the function concentrates near the equator (sectoral harmonics). For intermediate $m$, the pattern is more complex (tesseral harmonics).</p>
+
+<!-- Interactive: Polar plot of P_l^m in spherical coords -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Explore &middot; $P_l^m(\cos\theta)$ in Spherical Coordinates</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>l <span class="val" id="polar-l-val">2</span></label>
+      <input type="range" id="polar-l-slider" min="0" max="5" value="2" step="1">
+    </div>
+    <div class="ctrl">
+      <label>m <span class="val" id="polar-m-val">0</span></label>
+      <input type="range" id="polar-m-slider" min="0" max="5" value="0" step="1">
+    </div>
+  </div>
+  <div class="viz" id="polar-viz" style="height:380px;"></div>
+  <div class="readout" id="polar-readout"></div>
+</div>
+
+<h2 class="section-break">Orthogonality and Completeness</h2>
+
+<p>The spherical harmonics form a complete orthonormal basis on the sphere $S^2$:</p>
+
+$$\int_0^{2\pi}\int_0^{\pi} Y_l^{m*}(\theta,\phi)\, Y_{l'}^{m'}(\theta,\phi)\, \sin\theta \, d\theta \, d\phi = \delta_{ll'} \delta_{mm'}$$
+
+<p>This means any function on the sphere can be expanded as $f(\theta,\phi) = \sum_{l=0}^{\infty}\sum_{m=-l}^{l} c_{lm} Y_l^m(\theta,\phi)$. This is the <em>spherical Fourier expansion</em> &mdash; precisely analogous to decomposing a periodic signal into sines and cosines, but on a sphere instead of a line.</p>
+
+<p>The coefficients $c_{lm}$ tell you how much of each &ldquo;angular mode&rdquo; is present. Low $l$ captures broad features; high $l$ captures fine angular detail. This is used in cosmology (CMB analysis), computer graphics (environment lighting), and geophysics (Earth's gravitational field).</p>
+
+<h2 class="section-break">Connection to Angular Momentum</h2>
+
+<p>In quantum mechanics, $Y_l^m$ is an eigenfunction of two operators simultaneously:</p>
+
+$$\hat{L}^2 Y_l^m = \hbar^2 l(l+1)\, Y_l^m \qquad \hat{L}_z Y_l^m = \hbar m \, Y_l^m$$
+
+<p>So $l$ determines the <em>total</em> angular momentum, and $m$ determines its <em>projection</em> along the $z$-axis. The restriction $|m| \le l$ is the quantum statement that a component of angular momentum can never exceed the total.</p>
+
+<div class="aside-note">
+  <strong>Physical intuition:</strong> when $m = l$ (maximum $z$-projection), the probability distribution concentrates near the equatorial plane &mdash; the particle orbits roughly in the $xy$-plane. When $m = 0$, the distribution concentrates near the poles &mdash; the orbit is roughly in a plane containing the $z$-axis.
+</div>
+
+<h2 class="section-break">Exercises</h2>
+
+<div class="exercises">
+  <div class="exercise">
+    <p><strong>1.</strong> How many spherical harmonics exist for a given $l$? (Answer in terms of $l$.)</p>
+    <input type="text" id="ex1-input" placeholder="Enter answer...">
+    <button class="btn" onclick="checkExercise(1)">Check</button>
+    <div class="feedback" id="ex1-fb"></div>
+  </div>
+
+  <div class="exercise">
+    <p><strong>2.</strong> For the hydrogen atom, what orbital shape corresponds to $l=1$, $m=0$?</p>
+    <input type="text" id="ex2-input" placeholder="Enter answer...">
+    <button class="btn" onclick="checkExercise(2)">Check</button>
+    <div class="feedback" id="ex2-fb"></div>
+  </div>
+
+  <div class="exercise">
+    <p><strong>3.</strong> What is $Y_0^0(\theta, \phi)$ equal to? (Give the numerical constant as a fraction.)</p>
+    <input type="text" id="ex3-input" placeholder="Enter answer...">
+    <button class="btn" onclick="checkExercise(3)">Check</button>
+    <div class="feedback" id="ex3-fb"></div>
+  </div>
+
+  <div class="exercise">
+    <p><strong>4.</strong> How many nodes (zeros) does $P_3(\cos\theta)$ have in the interval $\theta \in (0, \pi)$?</p>
+    <input type="text" id="ex4-input" placeholder="Enter answer...">
+    <button class="btn" onclick="checkExercise(4)">Check</button>
+    <div class="feedback" id="ex4-fb"></div>
+  </div>
+</div>
+
+<p class="closing"><a href="../">DeepExplain</a> &mdash; built for curiosity</p>
+
+</main>
+
+<script src="../js/spherical-harmonics.js"></script>
+
+<!-- GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-GY760J0K7L"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-GY760J0K7L');
+</script>
+
+</body>
+</html>
