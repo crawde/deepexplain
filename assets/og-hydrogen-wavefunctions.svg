@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#05050b"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#5c9ce6"/>
+      <stop offset="100%" stop-color="#7eb4ee"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="55%" cy="40%" r="35%">
+      <stop offset="0%" stop-color="rgba(92,156,230,0.12)"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <radialGradient id="nucleus" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(255,183,77,0.6)"/>
+      <stop offset="60%" stop-color="rgba(255,183,77,0.2)"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <!-- Hydrogen orbital visualization -->
+  <g transform="translate(720, 270)">
+    <!-- 1s orbital — sphere -->
+    <circle cx="-180" cy="0" r="50" fill="none" stroke="#5c9ce6" stroke-width="1.5" opacity="0.35"/>
+    <circle cx="-180" cy="0" r="35" fill="none" stroke="#5c9ce6" stroke-width="1" opacity="0.2"/>
+    <circle cx="-180" cy="0" r="20" fill="rgba(92,156,230,0.08)"/>
+    <circle cx="-180" cy="0" r="4" fill="url(#nucleus)"/>
+    <text x="-180" y="75" text-anchor="middle" font-family="Georgia, serif" font-size="16" fill="rgba(92,156,230,0.4)" font-style="italic">1s</text>
+    <!-- 2p orbital — dumbbell -->
+    <ellipse cx="0" cy="-55" rx="35" ry="55" fill="none" stroke="#5c9ce6" stroke-width="1.5" opacity="0.4"/>
+    <ellipse cx="0" cy="-55" rx="35" ry="55" fill="rgba(92,156,230,0.04)"/>
+    <ellipse cx="0" cy="55" rx="35" ry="55" fill="none" stroke="#e68cd8" stroke-width="1.5" opacity="0.35"/>
+    <ellipse cx="0" cy="55" rx="35" ry="55" fill="rgba(230,140,216,0.03)"/>
+    <circle cx="0" cy="0" r="4" fill="url(#nucleus)"/>
+    <text x="0" y="135" text-anchor="middle" font-family="Georgia, serif" font-size="16" fill="rgba(92,156,230,0.4)" font-style="italic">2p</text>
+    <!-- 3d orbital — cloverleaf -->
+    <g transform="translate(180, 0)">
+      <ellipse cx="-45" cy="-45" rx="30" ry="40" fill="none" stroke="#5c9ce6" stroke-width="1.2" opacity="0.35" transform="rotate(-45,-45,-45)"/>
+      <ellipse cx="45" cy="-45" rx="30" ry="40" fill="none" stroke="#e68cd8" stroke-width="1.2" opacity="0.3" transform="rotate(45,45,-45)"/>
+      <ellipse cx="-45" cy="45" rx="30" ry="40" fill="none" stroke="#e68cd8" stroke-width="1.2" opacity="0.3" transform="rotate(-45,-45,45)"/>
+      <ellipse cx="45" cy="45" rx="30" ry="40" fill="none" stroke="#5c9ce6" stroke-width="1.2" opacity="0.35" transform="rotate(45,45,45)"/>
+      <circle cx="0" cy="0" r="4" fill="url(#nucleus)"/>
+      <text x="0" y="105" text-anchor="middle" font-family="Georgia, serif" font-size="16" fill="rgba(92,156,230,0.4)" font-style="italic">3d</text>
+    </g>
+  </g>
+  <!-- Quantum number labels -->
+  <g transform="translate(130, 160)" opacity="0.2">
+    <text font-family="Georgia, serif" font-size="18" fill="#5c9ce6" font-style="italic">n = 1, 2, 3, ...</text>
+    <text y="32" font-family="Georgia, serif" font-size="18" fill="#7eb4ee" font-style="italic">l = 0, 1, ..., n-1</text>
+    <text y="64" font-family="Georgia, serif" font-size="18" fill="#e68cd8" font-style="italic">m = -l, ..., +l</text>
+  </g>
+  <!-- Radial probability hint -->
+  <g transform="translate(100, 320)" opacity="0.1">
+    <path d="M0,60 C20,60 30,50 50,30 C70,10 80,5 100,20 C120,35 130,45 160,30 C190,15 200,5 240,50 C260,70 280,65 300,60" fill="none" stroke="#5c9ce6" stroke-width="2"/>
+    <text x="0" y="85" font-family="Georgia, serif" font-size="12" fill="#5c9ce6" font-style="italic">r²|R_nl(r)|²</text>
+  </g>
+  <!-- Branding -->
+  <text x="80" y="80" font-family="monospace" font-size="16" letter-spacing="6" fill="rgba(92,156,230,0.5)">DEEPEXPLAIN</text>
+  <!-- Title -->
+  <text x="80" y="510" font-family="Georgia, serif" font-size="42" font-weight="600" fill="#e8e8f0">Hydrogen Wave Functions</text>
+  <text x="80" y="560" font-family="Georgia, serif" font-size="28" fill="#7e7ea0">Orbitals, Quantum Numbers, and 3D Isosurfaces</text>
+  <!-- Equation -->
+  <text x="820" y="80" font-family="Georgia, serif" font-size="18" fill="rgba(230,140,216,0.4)" font-style="italic">ψ_nlm = R_nl(r) Y_l^m(θ,φ)</text>
+  <!-- Border accent -->
+  <rect x="0" y="0" width="4" height="630" fill="url(#blue)" opacity="0.6"/>
+</svg>

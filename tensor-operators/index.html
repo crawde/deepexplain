@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tensor Operators — The Hierarchy — DeepExplain</title>
+  <meta name="description" content="Interactive deep dive into the hierarchy of tensor operators. Scalars and vectors are just the beginning — explore how rank-k objects transform under rotations, with live 3D visualizations.">
+  <link rel="canonical" href="https://deepexplain.dev/tensor-operators/">
+  <meta property="og:title" content="Tensor Operators — The Hierarchy — DeepExplain">
+  <meta property="og:description" content="Scalars, vectors, quadrupoles, and beyond. Interactive 3D visualizations of how tensor operators transform under rotations. The Wigner-Eckart theorem explained.">
+  <meta property="og:url" content="https://deepexplain.dev/tensor-operators/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="DeepExplain">
+  <meta property="og:image" content="https://deepexplain.dev/assets/og-tensor-operators.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Tensor Operators — The Hierarchy — DeepExplain">
+  <meta name="twitter:description" content="Interactive deep dive into tensor operators. Scalars and vectors are just rank 0 and 1 of an infinite hierarchy.">
+  <meta name="twitter:image" content="https://deepexplain.dev/assets/og-tensor-operators.png">
+  <meta name="theme-color" content="#05050b">
+  <meta name="author" content="DeepExplain">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2270%22 font-family=%22monospace%22 fill=%22%235c9ce6%22>DE</text></svg>">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="page-transition" id="page-transition"></div>
+<div class="scroll-progress" id="scroll-progress"></div>
+
+<!-- Navigation -->
+<nav class="topnav" id="topnav">
+  <a href="../" class="nav-home">
+    <span class="nav-logo">&#x27E8; &#x27E9;</span>
+    <span>Deep<span class="accent">Explain</span></span>
+  </a>
+  <span class="nav-sep">&#xB7;</span>
+  <span class="nav-current">Tensor Operators</span>
+</nav>
+
+<!-- Hero: 3D rotating coordinate frame with objects of different rank -->
+<div class="hero-scene" id="tensor-hero" style="height:55vh;min-height:380px;">
+  <div class="hero-overlay" style="background:linear-gradient(180deg, rgba(5,5,11,0) 0%, rgba(5,5,11,0.3) 50%, rgba(5,5,11,0.95) 100%);">
+    <div class="hero-title-wrap">
+      <h1 class="hero-title">The objects of physics form a hierarchy under rotations.</h1>
+      <p class="hero-sub">Scalars (rank 0), vectors (rank 1), and the infinite tower above them.</p>
+    </div>
+  </div>
+  <div class="hero-state" id="hero-rank-readout">Rotating frame</div>
+  <canvas id="hero-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;"></canvas>
+  <div class="scroll-hint"><div class="scroll-arrow"></div></div>
+</div>
+
+<!-- Main content -->
+<main>
+
+<p class="lead">In physics, scalars are quantities that don't change under rotations. Vectors are quantities with three components that mix in a specific way. But this is just the beginning of a hierarchy: rank-2 tensors, rank-3 tensors, and so on &mdash; each with $(2k+1)$ components that transform in an increasingly intricate pattern. This hierarchy is not a mathematical curiosity. It is the organizing principle of angular momentum in quantum mechanics, and it determines which transitions are allowed and which are forbidden.</p>
+
+<p>The central idea: <strong>a tensor operator of rank $k$ has $2k+1$ components $T_q^{(k)}$ (where $q = -k, -k+1, \ldots, k$) that transform among themselves under rotations in exactly the same way the spherical harmonics $Y_k^q$ do.</strong> Let's build this up from scratch.</p>
+
+<h2 class="section-break">Rank 0: Scalars</h2>
+
+<p>A <em>scalar</em> is an operator $S$ that is unchanged by rotations. If you rotate the entire physical system by any angle about any axis, $S$ remains the same:</p>
+
+$$R(\hat{n}, \theta) \, S \, R^\dagger(\hat{n}, \theta) = S$$
+
+<p>In terms of angular momentum commutators, this means a scalar commutes with every component of $\vec{J}$:</p>
+
+$$[J_i, S] = 0 \qquad \text{for } i = x, y, z$$
+
+<p>Examples: the Hamiltonian $H$ of a rotationally symmetric system, the dot product $\vec{A} \cdot \vec{B}$ of two vectors, the squared angular momentum $\vec{J}^2$. A scalar has exactly one component ($2 \cdot 0 + 1 = 1$) &mdash; itself. Rotate the coordinate axes in the visualization below; the scalar (golden sphere) doesn't move:</p>
+
+<!-- Interactive: scalar invariance under rotation -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Rank 0 &middot; Scalar Invariance Under Rotation</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>Rotation angle $\theta$ <span class="val" id="scalar-angle-val">0&deg;</span></label>
+      <input type="range" id="scalar-angle-slider" min="0" max="360" value="0" step="1">
+    </div>
+    <div class="ctrl">
+      <label>Axis <span class="val" id="scalar-axis-val">z</span></label>
+      <div class="btn-row" id="scalar-axis-btns">
+        <button class="btn active" data-axis="z">z-axis</button>
+        <button class="btn" data-axis="y">y-axis</button>
+        <button class="btn" data-axis="x">x-axis</button>
+      </div>
+    </div>
+  </div>
+  <div class="viz" id="scalar-viz" style="height:360px;"></div>
+  <div class="readout" id="scalar-readout">The scalar is invariant &mdash; 1 component, unchanged by any rotation.</div>
+</div>
+
+<p>This is the trivial case. Every physicist encounters scalars so often that they forget scalars are a special case of something larger. The next step is more interesting.</p>
+
+<h2 class="section-break">Rank 1: Vectors</h2>
+
+<p>A <em>vector operator</em> $\vec{V} = (V_x, V_y, V_z)$ has three Cartesian components that mix under rotations:</p>
+
+$$R(\hat{n}, \theta) \, V_i \, R^\dagger(\hat{n}, \theta) = \sum_j R_{ij}(\hat{n}, \theta) \, V_j$$
+
+<p>where $R_{ij}$ is the $3 \times 3$ rotation matrix. But there is a much more revealing way to package these three components. Instead of $(V_x, V_y, V_z)$, define the <em>spherical components</em>:</p>
+
+$$T_{+1}^{(1)} = -\frac{1}{\sqrt{2}}(V_x + iV_y) \qquad T_0^{(1)} = V_z \qquad T_{-1}^{(1)} = \frac{1}{\sqrt{2}}(V_x - iV_y)$$
+
+<p>These three components ($q = -1, 0, +1$, so $2 \cdot 1 + 1 = 3$) are called <em>spherical tensor components of rank 1</em>. They transform under rotations exactly like the spherical harmonics $Y_1^{-1}$, $Y_1^0$, $Y_1^1$.</p>
+
+<p>The defining commutation relations with angular momentum are:</p>
+
+$$[J_z, T_q^{(1)}] = \hbar q \, T_q^{(1)} \qquad [J_\pm, T_q^{(1)}] = \hbar \sqrt{2 - q(q \pm 1)} \, T_{q \pm 1}^{(1)}$$
+
+<p>where $J_\pm = J_x \pm iJ_y$ are the raising and lowering operators. Watch the vector components mix as the coordinate frame rotates:</p>
+
+<!-- Interactive: vector rotation in 3D -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Rank 1 &middot; Vector Components Under Rotation</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>Rotation angle $\theta$ <span class="val" id="vector-angle-val">0&deg;</span></label>
+      <input type="range" id="vector-angle-slider" min="0" max="360" value="0" step="1">
+    </div>
+    <div class="ctrl">
+      <label>Axis <span class="val" id="vector-axis-val">z</span></label>
+      <div class="btn-row" id="vector-axis-btns">
+        <button class="btn active" data-axis="z">z-axis</button>
+        <button class="btn" data-axis="y">y-axis</button>
+        <button class="btn" data-axis="x">x-axis</button>
+      </div>
+    </div>
+  </div>
+  <div class="viz" id="vector-viz" style="height:360px;"></div>
+  <div class="readout" id="vector-readout">3 components. $V_x$, $V_y$, $V_z$ mix under rotation, but $|\vec{V}|$ is invariant.</div>
+</div>
+
+<p>Notice: the length of the vector doesn't change &mdash; $|\vec{V}|^2 = V_x^2 + V_y^2 + V_z^2$ is a scalar (rank 0). Rotation mixes the three <em>components</em>, but the magnitude stays put. This is the rank-1 irreducible representation of the rotation group $SO(3)$.</p>
+
+<h2 class="section-break">Rank 2: Quadrupoles and Beyond</h2>
+
+<p>A rank-2 tensor operator has $2 \cdot 2 + 1 = 5$ independent components $T_q^{(2)}$ with $q = -2, -1, 0, +1, +2$. Physically, rank-2 tensors describe <em>quadrupole moments</em>, <em>stress tensors</em>, and the <em>anisotropic part of any $3 \times 3$ matrix</em>.</p>
+
+<p>If you start with a Cartesian rank-2 tensor $T_{ij}$ (a $3 \times 3$ matrix like the moment of inertia), it decomposes into irreducible pieces:</p>
+
+$$T_{ij} = \underbrace{\tfrac{1}{3}\text{Tr}(T) \, \delta_{ij}}_{\text{rank 0 (scalar)}} + \underbrace{\tfrac{1}{2}(T_{ij} - T_{ji})}_{\text{rank 1 (antisymmetric)}} + \underbrace{\left(\tfrac{1}{2}(T_{ij} + T_{ji}) - \tfrac{1}{3}\text{Tr}(T)\,\delta_{ij}\right)}_{\text{rank 2 (symmetric traceless)}}$$
+
+<p>A $3 \times 3$ matrix has 9 components: 1 comes from the trace (rank 0), 3 from the antisymmetric part (rank 1, equivalent to a pseudovector), and 5 from the symmetric traceless part (rank 2). This $9 = 1 + 3 + 5$ is the tensor product decomposition $1 \otimes 1 = 0 \oplus 1 \oplus 2$.</p>
+
+<p>The visualization below shows a rank-2 quadrupole as an angular deformation pattern. Five independent lobes, corresponding to $q = -2, \ldots, +2$:</p>
+
+<!-- Interactive: rank-2 tensor quadrupole visualization -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Rank 2 &middot; Quadrupole Components $T_q^{(2)}$</div>
+  <div class="controls">
+    <div class="ctrl" style="min-width:100%">
+      <div class="btn-row" id="quadrupole-btns">
+        <button class="btn" data-q="-2">$q = -2$</button>
+        <button class="btn" data-q="-1">$q = -1$</button>
+        <button class="btn active" data-q="0">$q = 0$</button>
+        <button class="btn" data-q="1">$q = +1$</button>
+        <button class="btn" data-q="2">$q = +2$</button>
+        <button class="btn" data-q="all">All five</button>
+      </div>
+    </div>
+  </div>
+  <div class="viz" id="quadrupole-viz" style="height:400px;"></div>
+  <div class="readout" id="quadrupole-readout">$T_0^{(2)} \propto 3\cos^2\theta - 1$ (the familiar $d_{z^2}$ shape).</div>
+</div>
+
+<p>The $q = 0$ component is the classic "dumbbell-minus-equator" shape &mdash; positive along the poles, negative at the equator. The $q = \pm 1$ components are tilted lobes, and $q = \pm 2$ are the four-lobed "cloverleaf" patterns. These are the five $d$-orbital shapes from chemistry, and that is no coincidence &mdash; the $d$ orbitals are eigenstates of $L^2$ with $l = 2$, and the spherical harmonics $Y_2^q$ <em>are</em> rank-2 tensor components.</p>
+
+<h2 class="section-break">The General Pattern</h2>
+
+<p>A <em>spherical tensor operator of rank $k$</em> is a set of $2k + 1$ operators $\{T_q^{(k)} : q = -k, \ldots, k\}$ satisfying:</p>
+
+$$\boxed{[J_z, T_q^{(k)}] = \hbar q \, T_q^{(k)}}$$
+$$\boxed{[J_\pm, T_q^{(k)}] = \hbar \sqrt{k(k+1) - q(q \pm 1)} \, T_{q \pm 1}^{(k)}}$$
+
+<p>These are <em>identical in form</em> to the angular momentum relations $J_z |k, q\rangle = \hbar q |k, q\rangle$ and $J_\pm |k, q\rangle = \hbar\sqrt{k(k+1) - q(q\pm 1)} |k, q\pm 1\rangle$. The tensor components of rank $k$ live in a $(2k+1)$-dimensional space that rotates exactly like the spin-$k$ representation of angular momentum.</p>
+
+<p>The first commutation relation says $T_q^{(k)}$ carries angular momentum projection $q$ along $z$: if applied to a state $|m\rangle$, the result has projection $m + q$. The second says $J_\pm$ steps $q \to q \pm 1$ within the multiplet, with the same Clebsch&ndash;Gordan-like coefficients as for angular momentum states.</p>
+
+<!-- Interactive: component hierarchy -->
+<div class="interactive glow-border">
+  <div class="interactive-label">The Hierarchy &middot; Components by Rank</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>Rank $k$ <span class="val" id="hierarchy-rank-val">2</span></label>
+      <input type="range" id="hierarchy-rank-slider" min="0" max="6" value="2" step="1">
+    </div>
+  </div>
+  <div class="viz" id="hierarchy-viz" style="height:340px;"></div>
+  <div class="readout" id="hierarchy-readout">Rank 2: 5 components ($q = -2, -1, 0, +1, +2$). $J_\pm$ shifts $q$ by $\pm 1$.</div>
+</div>
+
+<p>The pattern is clean:</p>
+
+<table style="width:100%;border-collapse:collapse;margin:1.5rem 0;font-family:'Inter',sans-serif;font-size:0.85rem;">
+  <tr style="border-bottom:1px solid rgba(92,156,230,0.08);">
+    <th style="text-align:left;padding:0.6rem 0.5rem;color:#7e7ea0;font-weight:500;">Rank $k$</th>
+    <th style="text-align:left;padding:0.6rem 0.5rem;color:#7e7ea0;font-weight:500;">Components</th>
+    <th style="text-align:left;padding:0.6rem 0.5rem;color:#7e7ea0;font-weight:500;">Physical example</th>
+  </tr>
+  <tr style="border-bottom:1px solid rgba(92,156,230,0.03);">
+    <td style="padding:0.5rem;color:#b8bcc8;">0</td>
+    <td style="padding:0.5rem;color:#b8bcc8;">1</td>
+    <td style="padding:0.5rem;color:#8899aa;">Energy, $\vec{J}^2$, $\vec{A} \cdot \vec{B}$</td>
+  </tr>
+  <tr style="border-bottom:1px solid rgba(92,156,230,0.03);">
+    <td style="padding:0.5rem;color:#b8bcc8;">1</td>
+    <td style="padding:0.5rem;color:#b8bcc8;">3</td>
+    <td style="padding:0.5rem;color:#8899aa;">Position $\vec{r}$, dipole moment $\vec{d}$, angular momentum $\vec{J}$</td>
+  </tr>
+  <tr style="border-bottom:1px solid rgba(92,156,230,0.03);">
+    <td style="padding:0.5rem;color:#b8bcc8;">2</td>
+    <td style="padding:0.5rem;color:#b8bcc8;">5</td>
+    <td style="padding:0.5rem;color:#8899aa;">Quadrupole moment, $d$-orbitals, traceless stress tensor</td>
+  </tr>
+  <tr style="border-bottom:1px solid rgba(92,156,230,0.03);">
+    <td style="padding:0.5rem;color:#b8bcc8;">3</td>
+    <td style="padding:0.5rem;color:#b8bcc8;">7</td>
+    <td style="padding:0.5rem;color:#8899aa;">Octupole moment, $f$-orbitals</td>
+  </tr>
+  <tr>
+    <td style="padding:0.5rem;color:#b8bcc8;">$k$</td>
+    <td style="padding:0.5rem;color:#b8bcc8;">$2k+1$</td>
+    <td style="padding:0.5rem;color:#8899aa;">$2^k$-pole moment, rank-$k$ spherical harmonic $Y_k^q$</td>
+  </tr>
+</table>
+
+<h2 class="section-break">The Ladder Structure</h2>
+
+<p>The commutation relation $[J_\pm, T_q^{(k)}] = \hbar\sqrt{k(k+1) - q(q\pm 1)} \, T_{q\pm 1}^{(k)}$ means $J_+$ and $J_-$ act as <em>ladder operators on the tensor components themselves</em>. Just as $J_+$ raises $|j, m\rangle$ to $|j, m+1\rangle$, the action of $J_+$ on $T_q^{(k)}$ produces $T_{q+1}^{(k)}$ (up to a coefficient).</p>
+
+<p>This is the deep reason the hierarchy exists. The rotation group has irreducible representations labeled by a non-negative integer (or half-integer) $k$, and the components within each representation are labeled by $q$. Tensor operators <em>are</em> these representations, living not in the Hilbert space of states but in the space of operators.</p>
+
+<!-- Interactive: J_pm ladder action -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Ladder Operators &middot; $J_\pm$ Action on $T_q^{(k)}$</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>Rank $k$ <span class="val" id="ladder-rank-val">2</span></label>
+      <input type="range" id="ladder-rank-slider" min="1" max="4" value="2" step="1">
+    </div>
+  </div>
+  <div class="viz" id="ladder-viz" style="height:300px;"></div>
+  <div class="readout" id="ladder-readout">Click a component to see $J_+$ and $J_-$ transitions with coefficients.</div>
+</div>
+
+
+<h2 class="section-break">Connection to Spherical Harmonics</h2>
+
+<p>Why do the $Y_k^q$ keep appearing? Because the spherical harmonics <em>are</em> the simplest tensor operators of each rank. Specifically, $C_q^{(k)}(\theta, \phi) = \sqrt{\frac{4\pi}{2k+1}} Y_k^q(\theta, \phi)$ forms a rank-$k$ spherical tensor when we identify $\hat{n} = (\theta, \phi)$ as a unit vector on the sphere.</p>
+
+<p>This means the angular shapes of the $s, p, d, f, \ldots$ orbitals are literally rank-$0, 1, 2, 3, \ldots$ tensor harmonics. The $s$-orbital is spherically symmetric (scalar). The three $p$-orbitals form a vector. The five $d$-orbitals form a rank-2 tensor. The seven $f$-orbitals form rank 3.</p>
+
+<!-- Interactive: spherical harmonic gallery by rank -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Spherical Harmonics as Tensor Components &middot; $Y_k^q(\theta, \phi)$</div>
+  <div class="controls">
+    <div class="ctrl" style="min-width:100%">
+      <div class="btn-row" id="sh-rank-btns">
+        <button class="btn" data-rank="0">$k=0$ (s)</button>
+        <button class="btn" data-rank="1">$k=1$ (p)</button>
+        <button class="btn active" data-rank="2">$k=2$ (d)</button>
+        <button class="btn" data-rank="3">$k=3$ (f)</button>
+      </div>
+    </div>
+  </div>
+  <div class="viz" id="sh-gallery-viz" style="height:400px;"></div>
+  <div class="readout" id="sh-gallery-readout">Rank 2: five $d$-orbital shapes &mdash; the five components of a rank-2 tensor.</div>
+</div>
+
+<h2 class="section-break">The Wigner&ndash;Eckart Theorem</h2>
+
+<p>The payoff of this entire framework is the <strong>Wigner&ndash;Eckart theorem</strong> &mdash; arguably the single most powerful result in angular momentum theory. It says:</p>
+
+$$\langle j', m' | T_q^{(k)} | j, m \rangle = \langle j, m; k, q | j', m' \rangle \, \frac{\langle j' \| T^{(k)} \| j \rangle}{\sqrt{2j' + 1}}$$
+
+<p>In words: the matrix element of any rank-$k$ tensor operator between angular momentum states factorizes into two pieces:</p>
+
+<ol style="font-size:0.92rem;line-height:1.8;margin:1rem 0 1.5rem 1.5rem;color:#b8bcc8;">
+  <li><strong>A Clebsch&ndash;Gordan coefficient</strong> $\langle j, m; k, q | j', m' \rangle$ that depends only on the <em>geometry</em> (the quantum numbers $j, m, k, q, j', m'$) and encodes the <strong>selection rules</strong>.</li>
+  <li><strong>A reduced matrix element</strong> $\langle j' \| T^{(k)} \| j \rangle$ that depends on the <em>dynamics</em> (the specific operator and states) but is <strong>independent of $m$, $m'$, and $q$</strong>.</li>
+</ol>
+
+<p>The selection rules follow immediately from the Clebsch&ndash;Gordan coefficient:</p>
+
+$$m' = m + q \qquad |j - k| \le j' \le j + k$$
+
+<p>The first rule is the <strong>magnetic selection rule</strong>: the tensor component $T_q^{(k)}$ shifts the projection by exactly $q$. The second is the <strong>triangle rule</strong>: $j$, $k$, and $j'$ must form a triangle. For a scalar ($k = 0$), this gives $j' = j$ &mdash; scalars can't change the angular momentum. For a vector ($k = 1$), $j' = j - 1, j, j + 1$ &mdash; the familiar dipole selection rule $\Delta j = 0, \pm 1$.</p>
+
+<!-- Interactive: selection rules -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Selection Rules &middot; Wigner&ndash;Eckart in Action</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>Initial $j$ <span class="val" id="we-j-val">2</span></label>
+      <input type="range" id="we-j-slider" min="0" max="5" value="2" step="1">
+    </div>
+    <div class="ctrl">
+      <label>Tensor rank $k$ <span class="val" id="we-k-val">1</span></label>
+      <input type="range" id="we-k-slider" min="0" max="3" value="1" step="1">
+    </div>
+  </div>
+  <div class="viz" id="we-viz" style="height:400px;"></div>
+  <div class="readout" id="we-readout">Allowed transitions: $j' = 1, 2, 3$ (dipole selection rule $\Delta j = 0, \pm 1$).</div>
+</div>
+
+<p>The power of the Wigner&ndash;Eckart theorem is that once you know the reduced matrix element $\langle j' \| T^{(k)} \| j \rangle$ (one number), you get <em>all</em> $(2j+1)(2k+1)$ matrix elements for free &mdash; the Clebsch&ndash;Gordan coefficients are tabulated.</p>
+
+<h2 class="section-break">Building Higher Ranks: Tensor Products</h2>
+
+<p>Given two tensor operators $T^{(k_1)}$ and $U^{(k_2)}$, their <em>tensor product</em> produces operators of every rank from $|k_1 - k_2|$ to $k_1 + k_2$:</p>
+
+$$[T^{(k_1)} \otimes U^{(k_2)}]_q^{(K)} = \sum_{q_1, q_2} \langle k_1, q_1; k_2, q_2 | K, q \rangle \, T_{q_1}^{(k_1)} U_{q_2}^{(k_2)}$$
+
+<p>For example, coupling two vectors ($k_1 = k_2 = 1$) gives rank $0 \oplus 1 \oplus 2$ &mdash; the dot product (scalar), the cross product (pseudovector), and the symmetric traceless part (quadrupole). This is how the Cartesian decomposition we saw earlier connects to the spherical tensor framework.</p>
+
+<p>The visualization below shows how coupling two rank-1 tensors produces three irreducible pieces:</p>
+
+<!-- Interactive: tensor product decomposition -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Tensor Product &middot; $T^{(k_1)} \otimes U^{(k_2)}$ Decomposition</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>$k_1$ <span class="val" id="tp-k1-val">1</span></label>
+      <input type="range" id="tp-k1-slider" min="0" max="3" value="1" step="1">
+    </div>
+    <div class="ctrl">
+      <label>$k_2$ <span class="val" id="tp-k2-val">1</span></label>
+      <input type="range" id="tp-k2-slider" min="0" max="3" value="1" step="1">
+    </div>
+  </div>
+  <div class="viz" id="tp-viz" style="height:320px;"></div>
+  <div class="readout" id="tp-readout">$1 \otimes 1 = 0 \oplus 1 \oplus 2$ &mdash; 9 product components decompose into 1 + 3 + 5.</div>
+</div>
+
+<h2 class="section-break">Why This Matters</h2>
+
+<p>The tensor operator hierarchy is not abstract formalism. It determines:</p>
+
+<ul style="font-size:0.92rem;line-height:1.9;margin:1rem 0 1.5rem 1.3rem;color:#b8bcc8;">
+  <li><strong>Spectroscopic selection rules.</strong> Whether an atom can emit or absorb a photon depends on whether the relevant interaction operator (electric dipole, magnetic dipole, electric quadrupole, &hellip;) has a non-zero reduced matrix element. Rank determines which transitions are allowed.</li>
+  <li><strong>Nuclear moments.</strong> Nuclear electromagnetic moments are classified by tensor rank: charge (rank 0), magnetic dipole (rank 1), electric quadrupole (rank 2), magnetic octupole (rank 3), &hellip;. Higher-rank moments probe finer details of nuclear structure.</li>
+  <li><strong>Multipole radiation.</strong> Electromagnetic radiation fields decompose into multipole orders $E1, M1, E2, M2, \ldots$ corresponding to $k = 1, 1, 2, 2, \ldots$. The angular distribution of emitted photons is controlled by the tensor rank of the interaction.</li>
+  <li><strong>Crystallographic symmetry.</strong> In solid-state physics, the crystal field splits degenerate states according to how tensor operators of different rank decompose under the crystal's point group.</li>
+</ul>
+
+<p>Every time you see a selection rule, a multipole expansion, or a Clebsch&ndash;Gordan coefficient, the tensor operator hierarchy is working behind the scenes.</p>
+
+<div class="exercise-group">
+<h2 class="section-break">Exercises</h2>
+
+<div class="exercise">
+  <div class="exercise-header">Exercise 1</div>
+  <p>How many independent components does a rank-4 tensor operator have? Give the formula for general rank $k$.</p>
+</div>
+
+<div class="exercise">
+  <div class="exercise-header">Exercise 2</div>
+  <p>The electric quadrupole operator is rank 2 ($k = 2$). Using the triangle rule, what are the allowed values of $j'$ for an initial state with $j = 3$?</p>
+</div>
+
+<div class="exercise">
+  <div class="exercise-header">Exercise 3</div>
+  <p>Verify the decomposition $1 \otimes 1 = 0 \oplus 1 \oplus 2$ by counting components: the left side has $3 \times 3 = 9$ components. Show that $1 + 3 + 5 = 9$.</p>
+</div>
+
+<div class="exercise">
+  <div class="exercise-header">Exercise 4</div>
+  <p>A scalar operator has $k = 0$. Using the magnetic selection rule $m' = m + q$ with $q = 0$, show that a scalar cannot change $m$. Using the triangle rule, show it cannot change $j$ either. Conclude that scalar operators are diagonal in $|j, m\rangle$.</p>
+</div>
+
+<div class="exercise">
+  <div class="exercise-header">Exercise 5</div>
+  <p>Couple a rank-2 tensor with a rank-1 tensor: $2 \otimes 1 = ?$. What ranks appear, and how many total components does each side have?</p>
+</div>
+</div>
+
+<h2 class="section-break">Summary</h2>
+
+<ul>
+  <li>Tensor operators of rank $k$ have $2k+1$ components $T_q^{(k)}$ that transform under rotations like the spherical harmonics $Y_k^q$.</li>
+  <li>Rank 0 = scalars (invariant), rank 1 = vectors (3 components), rank 2 = quadrupoles (5 components), continuing to arbitrary $k$.</li>
+  <li>The defining property is the commutation with angular momentum: $[J_z, T_q^{(k)}] = \hbar q \, T_q^{(k)}$ and $[J_\pm, T_q^{(k)}] = \hbar\sqrt{k(k+1) - q(q\pm 1)} \, T_{q\pm 1}^{(k)}$.</li>
+  <li>The Wigner&ndash;Eckart theorem factorizes matrix elements into geometry (Clebsch&ndash;Gordan) and dynamics (reduced matrix element), yielding universal selection rules.</li>
+  <li>Tensor products of operators decompose into irreducible ranks via Clebsch&ndash;Gordan coupling: $k_1 \otimes k_2 = |k_1 - k_2| \oplus \cdots \oplus (k_1 + k_2)$.</li>
+</ul>
+
+</main>
+
+<footer>
+  <p>DEEPEXPLAIN</p>
+  <p class="footer-sub">Interactive explorations of physics &amp; mathematics</p>
+  <p class="footer-year">&copy; 2025&ndash;2026</p>
+</footer>
+
+<script src="../js/tensor-operators.js"></script>
+
+<!-- Scroll progress + reveal + nav scroll -->
+<script>
+  // Scroll progress
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    document.getElementById('scroll-progress').style.width = (scrolled * 100) + '%';
+  }, { passive: true });
+
+  // Nav scroll class
+  const topnav = document.getElementById('topnav');
+  window.addEventListener('scroll', () => {
+    topnav.classList.toggle('scrolled', window.scrollY > 40);
+  }, { passive: true });
+
+  // Section reveal
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.interactive, .scene-3d, h2.section-break').forEach(el => revealObserver.observe(el));
+
+  // Page transition on nav home click
+  document.querySelectorAll('.nav-home').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const href = this.getAttribute('href');
+      document.getElementById('page-transition').classList.add('active');
+      setTimeout(() => { window.location.href = href; }, 350);
+    });
+  });
+
+  // Fade scroll hint
+  const scrollHint = document.querySelector('.scroll-hint');
+  if (scrollHint) {
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 80) {
+        scrollHint.style.opacity = '0';
+        scrollHint.style.transition = 'opacity .5s';
+      }
+    }, { passive: true });
+  }
+</script>
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-GY760J0K7L"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-GY760J0K7L');
+</script>
+
+</body>
+</html>

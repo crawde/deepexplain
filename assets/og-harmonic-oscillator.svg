@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#05050b"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#5c9ce6"/>
+      <stop offset="100%" stop-color="#7eb4ee"/>
+    </linearGradient>
+    <linearGradient id="pink" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#e68cd8"/>
+      <stop offset="100%" stop-color="#f0a8e4"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="rgba(92,156,230,0.08)"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <!-- Wave function curves (Re part - solid) -->
+  <path d="M100,350 C200,350 250,200 350,180 C450,160 480,280 530,310 C580,340 620,380 700,380 C780,380 820,340 870,310 C920,280 950,160 1050,180 C1100,200 1100,350 1100,350" fill="none" stroke="url(#blue)" stroke-width="3.5" opacity="0.9"/>
+  <!-- Wave function curves (Im part - dashed) -->
+  <path d="M100,350 C200,330 280,400 360,400 C440,400 480,250 530,220 C580,190 630,160 700,180 C770,200 820,250 870,280 C920,310 960,400 1050,400 C1100,390 1100,350 1100,350" fill="none" stroke="url(#pink)" stroke-width="3" stroke-dasharray="12,8" opacity="0.8"/>
+  <!-- Potential (faint parabola) -->
+  <path d="M200,350 C300,340 400,200 600,120 C800,200 900,340 1000,350" fill="none" stroke="rgba(255,183,77,0.12)" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <!-- Zero line -->
+  <line x1="80" y1="350" x2="1120" y2="350" stroke="rgba(92,156,230,0.12)" stroke-width="1"/>
+  <!-- Branding -->
+  <text x="80" y="80" font-family="monospace" font-size="16" letter-spacing="6" fill="rgba(92,156,230,0.5)">DEEPEXPLAIN</text>
+  <!-- Title -->
+  <text x="80" y="530" font-family="Georgia, serif" font-size="42" font-weight="600" fill="#e8e8f0">Harmonic Oscillator</text>
+  <text x="80" y="580" font-family="Georgia, serif" font-size="32" fill="#7e7ea0">Time Evolution of Wave Functions</text>
+  <!-- Legend -->
+  <line x1="900" y1="530" x2="940" y2="530" stroke="#5c9ce6" stroke-width="3"/>
+  <text x="948" y="535" font-family="sans-serif" font-size="14" fill="#7e7ea0">Re ψ</text>
+  <line x1="900" y1="560" x2="940" y2="560" stroke="#e68cd8" stroke-width="3" stroke-dasharray="8,5"/>
+  <text x="948" y="565" font-family="sans-serif" font-size="14" fill="#7e7ea0">Im ψ</text>
+  <!-- Equation -->
+  <text x="900" y="80" font-family="Georgia, serif" font-size="20" fill="rgba(230,140,216,0.5)" font-style="italic">ψ(ε,t) = Aε²e^(-ε²/2)</text>
+  <!-- Border accent -->
+  <rect x="0" y="0" width="4" height="630" fill="url(#blue)" opacity="0.6"/>
+</svg>

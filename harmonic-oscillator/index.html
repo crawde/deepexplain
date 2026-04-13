@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harmonic Oscillator Time Evolution — DeepExplain</title>
+  <meta name="description" content="Interactive visualization of quantum harmonic oscillator wave function time evolution. Watch ψ(ε,t) = Aε²e^(-ε²/2) evolve — real and imaginary parts animated with parity conservation.">
+  <link rel="canonical" href="https://deepexplain.dev/harmonic-oscillator/">
+  <meta property="og:title" content="Harmonic Oscillator Time Evolution — DeepExplain">
+  <meta property="og:description" content="Interactive filmstrip animation of QHO wave function evolution. Eigenstates, decomposition, and parity conservation — all visualized.">
+  <meta property="og:url" content="https://deepexplain.dev/harmonic-oscillator/">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="https://deepexplain.dev/assets/og-harmonic-oscillator.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="DeepExplain">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Harmonic Oscillator Time Evolution — DeepExplain">
+  <meta name="twitter:description" content="Interactive filmstrip animation of QHO wave function evolution. Eigenstates, decomposition, and parity conservation — all visualized.">
+  <meta name="twitter:image" content="https://deepexplain.dev/assets/og-harmonic-oscillator.png">
+  <meta name="theme-color" content="#05050b">
+  <meta name="author" content="DeepExplain">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2270%22 font-family=%22monospace%22 fill=%22%235c9ce6%22>DE</text></svg>">
+  <link rel="apple-touch-icon" href="../assets/og-harmonic-oscillator.png">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="page-transition" id="page-transition"></div>
+<div class="scroll-progress" id="scroll-progress"></div>
+
+<!-- Navigation -->
+<nav class="topnav" id="topnav">
+  <a href="../" class="nav-home">
+    <span class="nav-logo">&#x27E8; &#x27E9;</span>
+    <span>Deep<span class="accent">Explain</span></span>
+  </a>
+  <span class="nav-sep">&#xB7;</span>
+  <span class="nav-current">Harmonic Oscillator</span>
+</nav>
+
+<!-- Hero: animated wave function -->
+<div class="hero-scene" id="ho-hero" style="height:55vh;min-height:380px;">
+  <div class="hero-overlay" style="background:linear-gradient(180deg, rgba(5,5,11,0) 0%, rgba(5,5,11,0.3) 50%, rgba(5,5,11,0.95) 100%);">
+    <div class="hero-title-wrap">
+      <h1 class="hero-title">Watching a quantum wave function breathe.</h1>
+      <p class="hero-sub">The real and imaginary parts of $\psi(\varepsilon, t) = A\varepsilon^2 e^{-\varepsilon^2/2}$ evolving in the harmonic potential.</p>
+    </div>
+  </div>
+  <div class="hero-state" id="hero-time-readout">t = 0</div>
+  <div id="hero-wf-viz" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;"></div>
+  <div class="scroll-hint"><div class="scroll-arrow"></div></div>
+</div>
+
+<!-- Main content -->
+<main>
+
+<p class="lead">The quantum harmonic oscillator is the single most important model in all of quantum mechanics. Every bound potential near its minimum looks like a harmonic oscillator. Its eigenstates form a complete basis, and its coherent states are the closest quantum mechanics gets to classical motion.</p>
+
+<p>Here we explore a specific question: given an initial wave function $\psi(\varepsilon, 0) = A \varepsilon^2 e^{-\varepsilon^2/2}$, what happens as time passes? The filmstrip below &mdash; the central visualization of this article &mdash; shows the answer.</p>
+
+<h2 class="section-break">The Filmstrip</h2>
+
+<p>Each row shows the wave function $\psi(\varepsilon, t)$ at a different time. Solid curves are the real part, dashed curves the imaginary part. Time increases from top to bottom. Notice how the wave function distorts and rotates in the complex plane, yet always remains <strong>symmetric about $\varepsilon = 0$</strong> &mdash; parity is conserved.</p>
+
+<!-- Main filmstrip visualization -->
+<div class="interactive glow-border">
+  <div class="interactive-label">The Filmstrip &middot; Time Evolution of $\psi(\varepsilon, t) = A\varepsilon^2 e^{-\varepsilon^2/2}$</div>
+  <div class="viz" id="filmstrip-viz" style="height:900px;overflow-y:auto;"></div>
+  <div class="readout">Solid = Re $\psi$, Dashed = Im $\psi$. Time increases downward. The wave function remains even at all times.</div>
+</div>
+
+<p>The wave function breathes &mdash; its real and imaginary parts oscillate in and out &mdash; but its symmetry never breaks. Why? Because $\varepsilon^2 e^{-\varepsilon^2/2}$ is an <em>even</em> function, and the harmonic oscillator conserves parity. We'll prove this below.</p>
+
+<h2 class="section-break">The Harmonic Oscillator Eigenstates</h2>
+
+<p>In dimensionless units ($\varepsilon = x\sqrt{m\omega/\hbar}$), the time-independent Schr&ouml;dinger equation for the harmonic oscillator is:</p>
+
+$$-\frac{1}{2}\frac{d^2\phi}{d\varepsilon^2} + \frac{1}{2}\varepsilon^2\phi = E\phi$$
+
+<p>The solutions are the <em>Hermite functions</em>:</p>
+
+$$\phi_n(\varepsilon) = \frac{1}{\sqrt{2^n n! \sqrt{\pi}}} \, H_n(\varepsilon) \, e^{-\varepsilon^2/2}$$
+
+<p>where $H_n$ is the $n$-th Hermite polynomial. The energy eigenvalues are the famous equally spaced ladder:</p>
+
+$$E_n = \left(n + \tfrac{1}{2}\right)\hbar\omega \qquad n = 0, 1, 2, \ldots$$
+
+<p>Each eigenstate has definite parity: $\phi_n(-\varepsilon) = (-1)^n \phi_n(\varepsilon)$. Even $n$ gives even functions, odd $n$ gives odd. Explore them below:</p>
+
+<!-- Interactive: eigenstate explorer -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Explore &middot; QHO Eigenstates $\phi_n(\varepsilon)$</div>
+  <div class="controls">
+    <div class="ctrl" style="min-width:100%">
+      <div class="btn-row" id="eigenstate-btns">
+        <button class="btn active" data-n="0">n = 0</button>
+        <button class="btn" data-n="1">n = 1</button>
+        <button class="btn" data-n="2">n = 2</button>
+        <button class="btn" data-n="3">n = 3</button>
+        <button class="btn" data-n="4">n = 4</button>
+        <button class="btn" data-n="5">n = 5</button>
+      </div>
+    </div>
+  </div>
+  <div class="viz" id="eigenstates-viz" style="height:340px;"></div>
+  <div class="readout" id="eigenstate-readout"></div>
+</div>
+
+<p>The ground state $\phi_0$ is a simple Gaussian &mdash; the minimum-uncertainty wave packet. Each higher state adds one more node and one more oscillation, while respecting the confining potential.</p>
+
+<h2 class="section-break">Decomposing the Initial State</h2>
+
+<p>Our initial wave function $\psi(\varepsilon, 0) = A\varepsilon^2 e^{-\varepsilon^2/2}$ is <em>not</em> an eigenstate &mdash; it's a superposition. To find which eigenstates contribute, we compute:</p>
+
+$$c_n = \int_{-\infty}^{\infty} \phi_n(\varepsilon) \, \psi(\varepsilon, 0) \, d\varepsilon$$
+
+<p>Since $\psi(\varepsilon, 0)$ is even, $c_n = 0$ for all odd $n$ (the integral of an even function times an odd function vanishes). Using the Hermite polynomial identity $\varepsilon^2 = \frac{1}{4}H_2(\varepsilon) + \frac{1}{2}$, we find that only $c_0$ and $c_2$ are non-zero:</p>
+
+$$\psi(\varepsilon, 0) = c_0 \, \phi_0(\varepsilon) + c_2 \, \phi_2(\varepsilon)$$
+
+<p>The visualization below shows the original function (white), its two eigenstate components (colored, dashed), and a coefficient bar chart:</p>
+
+<!-- Interactive: decomposition -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Decomposition &middot; $\psi(\varepsilon, 0) = c_0\phi_0 + c_2\phi_2$</div>
+  <div class="viz" id="decomposition-viz" style="height:380px;"></div>
+  <div class="readout">White = original $\psi(\varepsilon,0)$. Colored dashed = eigenstate components $c_n \phi_n$. Bar chart shows expansion coefficients.</div>
+</div>
+
+<h2 class="section-break">Time Evolution</h2>
+
+<p>Once we have the eigenstate decomposition, time evolution is exact. Each eigenstate acquires a phase factor:</p>
+
+$$\psi(\varepsilon, t) = c_0 \, \phi_0(\varepsilon) \, e^{-iE_0 t/\hbar} + c_2 \, \phi_2(\varepsilon) \, e^{-iE_2 t/\hbar}$$
+
+<p>With $E_0 = \frac{1}{2}\hbar\omega$ and $E_2 = \frac{5}{2}\hbar\omega$, we can factor out the overall phase:</p>
+
+$$\psi(\varepsilon, t) = e^{-i\omega t/2} \left[ c_0 \, \phi_0(\varepsilon) + c_2 \, \phi_2(\varepsilon) \, e^{-2i\omega t} \right]$$
+
+<p>The <strong>beat frequency</strong> between the two components is $\Delta E / \hbar = 2\omega$. The probability density $|\psi|^2$ oscillates at this beat frequency &mdash; the wave function "breathes" back and forth between looking more like $\phi_0$ and more like $\phi_2$.</p>
+
+<p>The animated visualization below shows this directly. Watch how the real (solid blue) and imaginary (dashed pink) parts rotate and interfere:</p>
+
+<!-- Interactive: animated wave function -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Animate &middot; Time Evolution of $\psi(\varepsilon, t)$</div>
+  <div class="controls">
+    <div class="ctrl" style="min-width:auto;">
+      <button class="btn active" id="animated-play-btn">Pause</button>
+    </div>
+    <div class="ctrl">
+      <label>Speed <span class="val" id="animated-speed-val">1.0x</span></label>
+      <input type="range" id="animated-speed-slider" min="0.1" max="4" value="1" step="0.1">
+    </div>
+  </div>
+  <div class="viz" id="animated-wf-viz" style="height:360px;"></div>
+  <div class="readout" id="animated-time-readout">t = 0</div>
+</div>
+
+<h2 class="section-break">Parity Conservation</h2>
+
+<p>The harmonic oscillator Hamiltonian commutes with the parity operator $\hat{P}$, where $\hat{P}\psi(\varepsilon) = \psi(-\varepsilon)$. This means parity is a conserved quantum number. Since our initial state is even:</p>
+
+$$\psi(-\varepsilon, 0) = A(-\varepsilon)^2 e^{-(-\varepsilon)^2/2} = A\varepsilon^2 e^{-\varepsilon^2/2} = \psi(\varepsilon, 0)$$
+
+<p>it must remain even at all times: $\psi(-\varepsilon, t) = \psi(\varepsilon, t)$ for all $t$. This is visible in every frame of the filmstrip &mdash; the wave function is always symmetric about $\varepsilon = 0$. The visualization below highlights this symmetry in real time:</p>
+
+<!-- Interactive: parity conservation -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Parity Conservation &middot; $\psi(-\varepsilon, t) = \psi(\varepsilon, t)$ always</div>
+  <div class="controls">
+    <div class="ctrl" style="min-width:auto;">
+      <button class="btn active" id="parity-play-btn">Pause</button>
+    </div>
+  </div>
+  <div class="viz" id="parity-viz" style="height:300px;"></div>
+  <div class="readout" id="parity-readout">Parity check running...</div>
+</div>
+
+<p>The left half (blue tint) is always a mirror image of the right half (pink tint). No amount of time evolution can break this symmetry. In fact, this is a deep consequence of Noether&rsquo;s theorem: the Hamiltonian&rsquo;s invariance under $\varepsilon \to -\varepsilon$ guarantees parity conservation.</p>
+
+<p>More generally: if the initial state has definite parity (even or odd), and the potential is symmetric $V(\varepsilon) = V(-\varepsilon)$, the parity is preserved for all time. An initially odd wave function ($\phi_1, \phi_3, \ldots$) would remain odd forever.</p>
+
+<h2 class="section-break">Classical Limit &amp; Coherent States</h2>
+
+<p>What does classical harmonic motion look like in quantum mechanics? The answer is <em>coherent states</em> &mdash; Gaussian wave packets displaced from the origin that oscillate back and forth like a classical particle:</p>
+
+$$|\alpha\rangle = e^{-|\alpha|^2/2} \sum_{n=0}^{\infty} \frac{\alpha^n}{\sqrt{n!}} |n\rangle$$
+
+<p>Unlike our $\varepsilon^2 e^{-\varepsilon^2/2}$ state (which only involves two eigenstates and merely "breathes"), a coherent state involves <em>all</em> eigenstates and its center of probability actually translates left and right &mdash; true oscillation. Try the different initial state presets below:</p>
+
+<!-- Interactive: custom initial state -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Explore &middot; Different Initial States</div>
+  <div class="controls">
+    <div class="ctrl" style="min-width:100%">
+      <div class="btn-row" id="custom-wf-btns">
+        <button class="btn" data-preset="ground">Ground $\phi_0$</button>
+        <button class="btn" data-preset="first">First excited $\phi_1$</button>
+        <button class="btn active" data-preset="custom">$A\varepsilon^2 e^{-\varepsilon^2/2}$</button>
+        <button class="btn" data-preset="superposition">$(\phi_0 + \phi_2)/\sqrt{2}$</button>
+        <button class="btn" data-preset="coherent">Coherent $|\alpha\rangle$</button>
+      </div>
+    </div>
+  </div>
+  <div class="viz" id="custom-wf-viz" style="height:360px;"></div>
+  <div class="readout" id="custom-wf-readout">t = 0</div>
+</div>
+
+<p>The ground state $\phi_0$ is stationary &mdash; its real and imaginary parts rotate uniformly and $|\psi|^2$ is constant. The coherent state $|\alpha\rangle$ oscillates like a classical spring. Our $\varepsilon^2 e^{-\varepsilon^2/2}$ state sits in between: it breathes (shape changes) but doesn't translate.</p>
+
+<div class="exercise-group">
+<h2 class="section-break">Exercises</h2>
+
+<div class="exercise">
+  <div class="exercise-header">Exercise 1</div>
+  <p>Verify analytically that $c_n = 0$ for all odd $n$. <em>Hint: consider the symmetry of the integrand $\phi_n(\varepsilon) \cdot \varepsilon^2 e^{-\varepsilon^2/2}$ under $\varepsilon \to -\varepsilon$.</em></p>
+</div>
+
+<div class="exercise">
+  <div class="exercise-header">Exercise 2</div>
+  <p>The beat period visible in the filmstrip is $T_{\text{beat}} = \pi/\omega$. Derive this from the energy difference $E_2 - E_0 = 2\hbar\omega$.</p>
+</div>
+
+<div class="exercise">
+  <div class="exercise-header">Exercise 3</div>
+  <p>At what time $t$ does $\psi(\varepsilon, t)$ become purely imaginary? Use the two-component form and find when $\text{Re}[\psi] = 0$ everywhere.</p>
+</div>
+
+<div class="exercise">
+  <div class="exercise-header">Exercise 4</div>
+  <p>If we instead start with $\psi(\varepsilon, 0) = A\varepsilon^3 e^{-\varepsilon^2/2}$ (an <em>odd</em> function), which eigenstates would contribute? What parity would the wave function have at later times?</p>
+</div>
+</div>
+
+<h2 class="section-break">Summary</h2>
+
+<ul>
+  <li>The QHO eigenstates $\phi_n$ form a complete basis with equally spaced energies $E_n = (n + \frac{1}{2})\hbar\omega$.</li>
+  <li>Any initial state can be decomposed into eigenstates; time evolution multiplies each by $e^{-iE_n t/\hbar}$.</li>
+  <li>$\psi(\varepsilon, 0) = A\varepsilon^2 e^{-\varepsilon^2/2}$ decomposes into only $\phi_0$ and $\phi_2$ (even-parity states).</li>
+  <li>The resulting time evolution shows "breathing" at the beat frequency $\Delta E/\hbar = 2\omega$.</li>
+  <li>Parity is conserved: an initially even wave function remains even forever.</li>
+</ul>
+
+</main>
+
+<footer>
+  <p>DEEPEXPLAIN</p>
+  <p class="footer-sub">Interactive explorations of physics &amp; mathematics</p>
+  <p class="footer-year">&copy; 2025&ndash;2026</p>
+</footer>
+
+<script src="../js/harmonic-oscillator.js"></script>
+
+<!-- Page transition on nav home click -->
+<script>
+  document.querySelectorAll('.nav-home').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const href = this.getAttribute('href');
+      document.getElementById('page-transition').classList.add('active');
+      setTimeout(() => { window.location.href = href; }, 350);
+    });
+  });
+</script>
+
+</body>
+</html>

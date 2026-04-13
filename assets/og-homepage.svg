@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#05050b"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#5c9ce6"/>
+      <stop offset="100%" stop-color="#7eb4ee"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="30%" cy="35%" r="35%">
+      <stop offset="0%" stop-color="rgba(92,156,230,0.12)"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="70%" cy="60%" r="30%">
+      <stop offset="0%" stop-color="rgba(230,140,216,0.08)"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow1)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+  <!-- Grid lines -->
+  <g opacity="0.04" stroke="#5c9ce6" stroke-width="0.5">
+    <line x1="0" y1="105" x2="1200" y2="105"/><line x1="0" y1="210" x2="1200" y2="210"/>
+    <line x1="0" y1="315" x2="1200" y2="315"/><line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="525" x2="1200" y2="525"/>
+    <line x1="200" y1="0" x2="200" y2="630"/><line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="600" y1="0" x2="600" y2="630"/><line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="1000" y1="0" x2="1000" y2="630"/>
+  </g>
+  <!-- Scattered mathematical symbols -->
+  <text x="180" y="170" font-family="Georgia, serif" font-size="28" fill="rgba(92,156,230,0.15)" font-style="italic">|ψ⟩</text>
+  <text x="420" y="130" font-family="Georgia, serif" font-size="24" fill="rgba(230,140,216,0.12)" font-style="italic">Y₂¹</text>
+  <text x="700" y="200" font-family="Georgia, serif" font-size="22" fill="rgba(92,156,230,0.1)" font-style="italic">T⁽ᵏ⁾</text>
+  <text x="950" y="160" font-family="Georgia, serif" font-size="26" fill="rgba(255,183,77,0.1)" font-style="italic">ψₙₗₘ</text>
+  <text x="300" y="280" font-family="Georgia, serif" font-size="20" fill="rgba(230,140,216,0.08)" font-style="italic">⟨φ|A|ψ⟩</text>
+  <text x="850" y="300" font-family="Georgia, serif" font-size="24" fill="rgba(92,156,230,0.08)" font-style="italic">Pₗ(cos θ)</text>
+  <text x="550" y="350" font-family="Georgia, serif" font-size="18" fill="rgba(255,183,77,0.08)" font-style="italic">Ĥψ = Eψ</text>
+  <!-- Wave decoration -->
+  <path d="M0,400 C100,380 200,420 300,390 C400,360 500,430 600,400 C700,370 800,420 900,390 C1000,360 1100,410 1200,400" fill="none" stroke="rgba(92,156,230,0.08)" stroke-width="2"/>
+  <path d="M0,430 C100,410 200,450 300,420 C400,390 500,460 600,430 C700,400 800,450 900,420 C1000,390 1100,440 1200,430" fill="none" stroke="rgba(230,140,216,0.06)" stroke-width="1.5"/>
+  <!-- Branding -->
+  <text x="80" y="80" font-family="monospace" font-size="16" letter-spacing="6" fill="rgba(92,156,230,0.5)">DEEPEXPLAIN</text>
+  <!-- Title -->
+  <text x="80" y="510" font-family="Georgia, serif" font-size="48" font-weight="600" fill="#e8e8f0">Interactive Explainers</text>
+  <text x="80" y="565" font-family="Georgia, serif" font-size="28" fill="#7e7ea0">Quantum mechanics, visualized from the ground up</text>
+  <!-- Border accent -->
+  <rect x="0" y="0" width="4" height="630" fill="url(#blue)" opacity="0.6"/>
+</svg>

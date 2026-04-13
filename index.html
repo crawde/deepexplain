@@ -10,18 +10,43 @@
   <meta property="og:description" content="Deep, interactive explorations of hard topics. Live visualizations, 3D scenes, and exercises.">
   <meta property="og:url" content="https://deepexplain.dev">
   <meta property="og:type" content="website">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔬</text></svg>">
+  <meta property="og:site_name" content="DeepExplain">
+  <meta property="og:image" content="https://deepexplain.dev/assets/og-homepage.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DeepExplain — Interactive long-form explainers">
+  <meta name="twitter:description" content="Deep, interactive explorations of hard topics. Live visualizations, 3D scenes, and exercises.">
+  <meta name="twitter:image" content="https://deepexplain.dev/assets/og-homepage.png">
+  <meta name="author" content="DeepExplain">
+  <meta name="theme-color" content="#06060e">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2270%22 font-family=%22monospace%22 fill=%22%235c9ce6%22>DE</text></svg>">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    html{font-size:16px}
+    html{font-size:16px;scroll-behavior:smooth}
     body{
       background:#06060e;
       color:#c8c8d4;
       font-family:'Source Serif 4','Georgia',serif;
       min-height:100vh;
       overflow-x:hidden;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    ::selection{background:rgba(92,156,230,0.25);color:#e8eaf6}
+
+    /* ─── Noise texture overlay ─── */
+    body::before{
+      content:'';
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      z-index:0;pointer-events:none;
+      opacity:.028;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-repeat:repeat;
+      background-size:200px 200px;
     }
 
     /* Canvas background */
@@ -30,46 +55,161 @@
       z-index:0;pointer-events:none;
     }
 
-    .page{position:relative;z-index:1}
+    /* ─── Page transition overlay ─── */
+    .page-transition{
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      z-index:9999;pointer-events:none;
+      background:#06060e;
+      opacity:0;
+      transition:opacity .35s cubic-bezier(.22,1,.36,1);
+    }
+    .page-transition.active{opacity:1;pointer-events:all}
 
-    /* Header */
+    .page{
+      position:relative;z-index:1;
+      opacity:0;
+      animation:pageIn .9s .1s cubic-bezier(.22,1,.36,1) forwards;
+    }
+    @keyframes pageIn{
+      from{opacity:0;transform:translateY(16px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+
+    /* ─── Gradient orb behind header ─── */
+    .hero-glow{
+      position:absolute;
+      top:-18vh;left:50%;
+      transform:translateX(-50%);
+      width:min(800px,95vw);
+      height:480px;
+      background:
+        radial-gradient(ellipse at 40% 50%,rgba(92,156,230,0.07) 0%,transparent 50%),
+        radial-gradient(ellipse at 60% 40%,rgba(180,100,220,0.04) 0%,transparent 45%),
+        radial-gradient(ellipse at 50% 60%,rgba(230,140,216,0.02) 0%,transparent 40%);
+      pointer-events:none;
+      animation:orbBreathe 14s infinite ease-in-out alternate;
+    }
+    @keyframes orbBreathe{
+      0%{opacity:.6;transform:translateX(-50%) scale(1)}
+      100%{opacity:1;transform:translateX(-50%) scale(1.1)}
+    }
+
+    /* ─── Header ─── */
     header{
+      position:relative;
       text-align:center;
       padding:12vh 2rem 6vh;
     }
+
+    /* Brand mark — Ψ glyph */
+    .brand-mark{
+      font-size:2.6rem;
+      line-height:1;
+      color:rgba(92,156,230,0.55);
+      text-shadow:0 0 40px rgba(92,156,230,0.12), 0 0 80px rgba(92,156,230,0.04);
+      margin-bottom:1.8rem;
+      font-family:'Source Serif 4',serif;
+      font-weight:400;
+      opacity:0;
+      animation:glyphIn .8s .1s cubic-bezier(.22,1,.36,1) forwards, glyphPulse 8s 1s infinite ease-in-out;
+      user-select:none;
+    }
+    @keyframes glyphIn{
+      from{opacity:0;transform:scale(0.85) translateY(8px)}
+      to{opacity:1;transform:scale(1) translateY(0)}
+    }
+    @keyframes glyphPulse{
+      0%,100%{text-shadow:0 0 40px rgba(92,156,230,0.08), 0 0 80px rgba(92,156,230,0.03);color:rgba(92,156,230,0.5)}
+      50%{text-shadow:0 0 50px rgba(92,156,230,0.18), 0 0 100px rgba(92,156,230,0.06);color:rgba(92,156,230,0.65)}
+    }
+
     header .logo{
       font-family:'JetBrains Mono',monospace;
-      font-size:.85rem;
-      letter-spacing:.35em;
+      font-size:.72rem;
+      letter-spacing:.4em;
       text-transform:uppercase;
       color:#5c9ce6;
-      margin-bottom:1.5rem;
-      opacity:.7;
+      margin-bottom:1.8rem;
+      opacity:0;
+      animation:fadeUp .7s .2s cubic-bezier(.22,1,.36,1) forwards;
     }
     header h1{
       font-family:'Source Serif 4',serif;
-      font-size:clamp(2rem,5vw,3.5rem);
+      font-size:clamp(2rem,5vw,3.2rem);
       font-weight:600;
       color:#e8e8f0;
-      line-height:1.2;
-      margin-bottom:1rem;
+      line-height:1.22;
+      margin-bottom:1.3rem;
+      opacity:0;
+      animation:fadeUp .7s .35s cubic-bezier(.22,1,.36,1) forwards;
     }
     header h1 span{
-      background:linear-gradient(135deg,#5c9ce6,#e68cd8);
+      background:linear-gradient(135deg,#5c9ce6 0%,#b07ce8 50%,#e68cd8 100%);
+      background-size:200% 200%;
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
       background-clip:text;
+      animation:gradientShift 8s infinite ease-in-out;
+    }
+    @keyframes gradientShift{
+      0%,100%{background-position:0% 50%}
+      50%{background-position:100% 50%}
     }
     header p{
-      font-size:1.15rem;
-      line-height:1.7;
-      color:#8888a0;
-      max-width:600px;
+      font-size:1.08rem;
+      line-height:1.75;
+      color:#7e7ea0;
+      max-width:520px;
       margin:0 auto;
       font-style:italic;
+      opacity:0;
+      animation:fadeUp .7s .5s cubic-bezier(.22,1,.36,1) forwards;
+    }
+    @keyframes fadeUp{
+      from{opacity:0;transform:translateY(20px)}
+      to{opacity:1;transform:translateY(0)}
     }
 
-    /* Articles grid */
+    /* ─── Stats strip ─── */
+    .stats{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:0;
+      margin-top:2.4rem;
+      opacity:0;
+      animation:fadeUp .6s .65s cubic-bezier(.22,1,.36,1) forwards;
+    }
+    .stat{
+      text-align:center;
+      padding:0 2rem;
+      position:relative;
+    }
+    .stat+.stat::before{
+      content:'';
+      position:absolute;left:0;top:50%;
+      transform:translateY(-50%);
+      width:1px;height:28px;
+      background:linear-gradient(180deg,transparent,rgba(92,156,230,0.12),transparent);
+    }
+    .stat-num{
+      font-family:'JetBrains Mono',monospace;
+      font-size:1.4rem;
+      font-weight:500;
+      color:rgba(92,156,230,0.7);
+      line-height:1;
+      margin-bottom:.3rem;
+    }
+    .stat-label{
+      font-family:'Inter',sans-serif;
+      font-size:.58rem;
+      letter-spacing:.15em;
+      text-transform:uppercase;
+      color:#3a3a54;
+      font-weight:400;
+    }
+
+    /* ─── Section label ─── */
     .articles{
       max-width:720px;
       margin:4vh auto 10vh;
@@ -77,132 +217,564 @@
     }
     .articles h2{
       font-family:'Inter',sans-serif;
-      font-size:.7rem;
+      font-size:.68rem;
+      font-weight:500;
       letter-spacing:.3em;
       text-transform:uppercase;
       color:#444460;
       margin-bottom:2rem;
+      padding-bottom:1rem;
+      border-bottom:1px solid rgba(92,156,230,0.04);
+      opacity:0;
+      animation:fadeUp .6s .75s cubic-bezier(.22,1,.36,1) forwards;
     }
 
+    /* ─── Cards ─── */
+    .card-wrap{
+      perspective:800px;
+      margin-bottom:1.5rem;
+    }
     .card{
       display:block;
       text-decoration:none;
-      padding:2rem 2.5rem;
-      border:1px solid #12121f;
-      border-radius:12px;
-      margin-bottom:1.5rem;
-      transition:border-color .4s,box-shadow .4s,transform .3s;
-      background:rgba(8,8,18,0.6);
-      backdrop-filter:blur(10px);
+      padding:2.2rem 2.5rem 2rem;
+      border:1px solid rgba(20,20,36,0.9);
+      border-radius:16px;
+      background:rgba(8,8,18,0.55);
+      backdrop-filter:blur(16px);
+      position:relative;
+      overflow:hidden;
+      transition:border-color .5s,box-shadow .5s,transform .4s cubic-bezier(.22,1,.36,1);
+      /* scroll reveal */
+      opacity:0;
+      transform:translateY(28px);
     }
+    .card.revealed{
+      opacity:1;
+      transform:translateY(0);
+      transition:opacity .65s cubic-bezier(.22,1,.36,1),transform .65s cubic-bezier(.22,1,.36,1),border-color .5s,box-shadow .5s;
+    }
+
+    /* accent stripe — left edge */
+    .card .card-accent{
+      position:absolute;top:0;left:0;bottom:0;
+      width:3px;
+      border-radius:16px 0 0 16px;
+      opacity:0;
+      transition:opacity .5s;
+    }
+    .card:hover .card-accent{opacity:1}
+    .card--qm .card-accent{background:linear-gradient(180deg,#5c9ce6,#b07ce8)}
+    .card--math .card-accent{background:linear-gradient(180deg,#66bb6a,#4fc3f7)}
+
+    /* luminous top edge on hover */
+    .card::before{
+      content:'';
+      position:absolute;top:0;left:0;right:0;
+      height:1px;
+      background:linear-gradient(90deg,transparent 0%,rgba(92,156,230,0.25) 20%,rgba(180,120,232,0.2) 50%,rgba(230,140,216,0.15) 80%,transparent 100%);
+      opacity:0;
+      transition:opacity .5s;
+    }
+    .card:hover::before{opacity:1}
+
+    /* cursor-aware radial glow */
+    .card::after{
+      content:'';
+      position:absolute;top:0;left:0;right:0;bottom:0;
+      background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(92,156,230,0.04) 0%,transparent 55%);
+      opacity:0;
+      transition:opacity .4s;
+      pointer-events:none;
+    }
+    .card:hover::after{opacity:1}
+
     .card:hover{
-      border-color:#1a2040;
-      box-shadow:0 0 40px rgba(92,156,230,0.04);
-      transform:translateY(-2px);
+      border-color:rgba(92,156,230,0.12);
+      box-shadow:0 12px 60px -16px rgba(92,156,230,0.1),0 0 0 1px rgba(92,156,230,0.04);
+      transform:translateY(-4px);
     }
+
     .card-tag{
       font-family:'JetBrains Mono',monospace;
-      font-size:.65rem;
+      font-size:.6rem;
       letter-spacing:.2em;
       text-transform:uppercase;
       color:#5c9ce6;
-      opacity:.6;
-      margin-bottom:.5rem;
+      opacity:.45;
+      margin-bottom:.7rem;
+      transition:opacity .4s;
     }
+    .card:hover .card-tag{opacity:.75}
+    .card--qm:hover .card-tag{color:#7eb4ee}
+    .card--math:hover .card-tag{color:#7ecf80}
     .card h3{
       font-family:'Source Serif 4',serif;
       font-size:1.3rem;
       font-weight:600;
       color:#d8d8e4;
-      margin-bottom:.5rem;
+      margin-bottom:.55rem;
+      transition:color .4s;
+      line-height:1.3;
     }
-    .card p{
-      font-size:.95rem;
-      line-height:1.6;
-      color:#777790;
+    .card:hover h3{color:#eaeaf4}
+    .card .card-desc{
+      font-size:.9rem;
+      line-height:1.7;
+      color:#5e5e7c;
+      font-family:'Inter',sans-serif;
+      font-weight:300;
     }
     .card-meta{
       font-family:'Inter',sans-serif;
-      font-size:.7rem;
-      color:#444460;
-      margin-top:.8rem;
+      font-size:.66rem;
+      color:#3c3c58;
+      margin-top:1.1rem;
+      display:flex;
+      flex-wrap:wrap;
+      gap:.4rem 1.2rem;
     }
-    .card-meta span{margin-right:1.2rem}
+    .card-meta span{
+      display:inline-flex;
+      align-items:center;
+      gap:.35rem;
+      transition:color .4s;
+    }
+    .card:hover .card-meta span{color:#4e5e78}
+    .card-meta .meta-dot{
+      width:3px;height:3px;
+      border-radius:50%;
+      background:rgba(92,156,230,0.2);
+      display:inline-block;
+    }
 
-    /* Footer */
+    /* ─── Coming soon cards ─── */
+    .card--upcoming{
+      opacity:0;
+      pointer-events:none;
+      cursor:default;
+      border-style:dashed;
+      border-color:rgba(30,30,50,0.6);
+    }
+    .card--upcoming.revealed{
+      opacity:1;
+    }
+    .card--upcoming .card-inner{
+      opacity:.32;
+      transition:opacity .4s;
+    }
+    .card--upcoming:nth-last-child(1) .card-inner{opacity:.22}
+    .card--upcoming .card-tag{
+      color:#5e5e7c;
+    }
+
+    /* ─── "NEW" badge on latest article ─── */
+    .card-badge{
+      display:inline-block;
+      font-family:'JetBrains Mono',monospace;
+      font-size:.48rem;
+      font-weight:500;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:#66bb6a;
+      background:rgba(102,187,106,0.08);
+      border:1px solid rgba(102,187,106,0.12);
+      padding:.18rem .6rem;
+      border-radius:100px;
+      margin-left:.6rem;
+      vertical-align:middle;
+      position:relative;
+      top:-1px;
+      animation:badgePulse 4s infinite ease-in-out;
+    }
+    @keyframes badgePulse{
+      0%,100%{box-shadow:0 0 0 0 rgba(102,187,106,0)}
+      50%{box-shadow:0 0 12px 0 rgba(102,187,106,0.06)}
+    }
+
+    /* ─── Arrow indicator on live cards ─── */
+    .card-arrow{
+      position:absolute;
+      right:2rem;top:50%;
+      transform:translateY(-50%) translateX(-6px);
+      opacity:0;
+      transition:opacity .4s,transform .4s cubic-bezier(.22,1,.36,1);
+      color:rgba(92,156,230,0.25);
+      font-size:1.1rem;
+      font-family:'Inter',sans-serif;
+    }
+    .card:hover .card-arrow{
+      opacity:1;
+      transform:translateY(-50%) translateX(0);
+    }
+
+    /* ─── Scroll indicator ─── */
+    .scroll-hint{
+      text-align:center;
+      margin-top:3rem;
+      opacity:0;
+      animation:fadeUp .6s .9s cubic-bezier(.22,1,.36,1) forwards;
+    }
+    .scroll-hint-arrow{
+      display:inline-block;
+      width:20px;height:20px;
+      border-right:1.5px solid rgba(92,156,230,0.15);
+      border-bottom:1.5px solid rgba(92,156,230,0.15);
+      transform:rotate(45deg);
+      animation:scrollBounce 2.4s infinite cubic-bezier(.22,1,.36,1);
+    }
+    @keyframes scrollBounce{
+      0%,100%{transform:rotate(45deg) translateY(0);opacity:.3}
+      50%{transform:rotate(45deg) translateY(6px);opacity:.6}
+    }
+
+    /* ─── Footer ─── */
     footer{
       text-align:center;
-      padding:4rem 2rem 3rem;
-      border-top:1px solid #0e0e1a;
+      padding:5rem 2rem 3rem;
+      position:relative;
+    }
+    footer::before{
+      content:'';
+      position:absolute;top:0;left:12%;right:12%;
+      height:1px;
+      background:linear-gradient(90deg,transparent,rgba(92,156,230,0.06),rgba(180,120,232,0.04),transparent);
     }
     footer p{
       font-family:'Inter',sans-serif;
-      font-size:.7rem;
-      color:#333348;
-      letter-spacing:.15em;
+      font-size:.66rem;
+      color:#34344e;
+      letter-spacing:.2em;
+      font-weight:400;
+    }
+    footer .footer-sub{
+      font-size:.58rem;
+      color:#2a2a44;
+      margin-top:.5rem;
+      letter-spacing:.1em;
+      font-weight:300;
+    }
+    footer .footer-year{
+      font-size:.52rem;
+      color:#222238;
+      margin-top:.7rem;
+      letter-spacing:.08em;
+      font-weight:300;
+      font-family:'JetBrains Mono',monospace;
+    }
+
+    /* ─── Focus-visible accessibility ─── */
+    .card:focus-visible{
+      outline:2px solid rgba(92,156,230,0.4);
+      outline-offset:2px;
+    }
+
+    /* ─── Mobile touch states ─── */
+    @media(hover:none){
+      .card:active{
+        border-color:rgba(92,156,230,0.12);
+        transform:scale(0.985);
+        transition:transform .15s;
+      }
+      .card:active .card-tag{opacity:.75}
+      .card:active h3{color:#eaeaf4}
+    }
+
+    /* ─── Responsive ─── */
+    @media(max-width:768px){
+      header{padding:10vh 1.5rem 5vh}
+      .brand-mark{font-size:2.2rem}
+      .stat{padding:0 1.5rem}
+      .stat-num{font-size:1.2rem}
+      .articles{padding:0 1.5rem}
+      .card{padding:1.8rem 2rem}
+      .card-arrow{display:none}
+    }
+    @media(max-width:600px){
+      .stat{padding:0 1.2rem}
+      .stat-num{font-size:1.1rem}
+      .stat-label{font-size:.54rem}
+      .card{padding:1.6rem 1.5rem}
+      .card h3{font-size:1.2rem}
+      .card .card-desc{font-size:.88rem}
+      header h1{font-size:clamp(1.7rem,6vw,2.6rem)}
+      .card-badge{font-size:.44rem;padding:.15rem .5rem}
+    }
+    @media(max-width:480px){
+      header{padding:8vh 1.2rem 4vh}
+      .brand-mark{font-size:1.8rem;margin-bottom:1.4rem}
+      header h1{font-size:clamp(1.6rem,7vw,2.4rem)}
+      header p{font-size:.98rem}
+      .stat{padding:0 1rem}
+      .stat-num{font-size:1rem}
+      .stat-label{font-size:.52rem}
+      .articles{padding:0 1rem;margin-top:2vh}
+      .card{padding:1.5rem 1.3rem;border-radius:12px}
+      .card h3{font-size:1.15rem}
+      .card .card-desc{font-size:.85rem}
+      .card-meta{font-size:.6rem;gap:.3rem .8rem}
+      footer{padding:3rem 1.2rem 2rem}
+      .scroll-hint{margin-top:2rem}
+    }
+    @media(max-width:380px){
+      .stats{flex-direction:column;gap:.8rem}
+      .stat+.stat::before{display:none}
+      header h1{font-size:clamp(1.4rem,7vw,2rem)}
+    }
+
+    /* ─── Reduced motion ─── */
+    @media(prefers-reduced-motion:reduce){
+      *,*::before,*::after{
+        animation-duration:0.01ms !important;
+        animation-iteration-count:1 !important;
+        transition-duration:0.01ms !important;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="page-transition" id="page-transition"></div>
   <canvas id="bg-canvas"></canvas>
   <div class="page">
     <header>
+      <div class="hero-glow"></div>
+      <div class="brand-mark" aria-hidden="true">Ψ</div>
       <div class="logo">DeepExplain</div>
       <h1>Interactive <span>long-form</span> explainers</h1>
       <p>Deep, rigorous explorations of hard topics — with live 3D visualizations, interactive controls, and exercises. No fluff.</p>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-num" data-target="35">0</div>
+          <div class="stat-label">Visualizations</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num" data-target="8">0</div>
+          <div class="stat-label">3D Scenes</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num" data-target="25">0</div>
+          <div class="stat-label">Exercises</div>
+        </div>
+      </div>
+      <div class="scroll-hint"><div class="scroll-hint-arrow"></div></div>
     </header>
 
     <section class="articles">
       <h2>Explorations</h2>
 
-      <a href="/dirac-notation/" class="card">
-        <div class="card-tag">Quantum Mechanics</div>
-        <h3>Dirac Notation — End to End</h3>
-        <p>From kets and bras to Fourier transforms and the uncertainty principle. Interactive Bloch sphere, live inner products, operator actions, and 8 exercises.</p>
-        <div class="card-meta">
-          <span>~45 min read</span>
-          <span>10 interactive visualizations</span>
-          <span>3 × 3D scenes</span>
-        </div>
-      </a>
-
-      <a href="/spherical-harmonics/" class="card">
-        <div class="card-tag">Quantum Mechanics</div>
-        <h3>Spherical Harmonics & Legendre Functions</h3>
-        <p>Interactive 3D visualizations of angular momentum eigenstates. Drag and rotate orbital shapes, explore Legendre polynomials, and build intuition for quantum angular structure.</p>
-        <div class="card-meta">
-          <span>~30 min read</span>
-          <span>6 interactive visualizations</span>
-          <span>3 × 3D scenes</span>
-        </div>
-      </a>
-
-      <div class="card" style="opacity:0.35;pointer-events:none;">
-        <div class="card-tag">Coming Soon</div>
-        <h3>Tensor Products & Entanglement</h3>
-        <p>Multi-qubit systems, Bell states, density matrices, and the EPR paradox — all visualized.</p>
-        <div class="card-meta"><span>In development</span></div>
+      <div class="card-wrap">
+        <a href="/dirac-notation/" class="card card--qm">
+          <div class="card-accent"></div>
+          <div class="card-tag">Quantum Mechanics</div>
+          <h3>Dirac Notation — End to End</h3>
+          <p class="card-desc">From kets and bras to Fourier transforms and the uncertainty principle. Interactive Bloch sphere, live inner products, operator actions, and 8 exercises.</p>
+          <div class="card-meta">
+            <span><span class="meta-dot"></span> ~45 min read</span>
+            <span><span class="meta-dot"></span> 10 interactive visualizations</span>
+            <span><span class="meta-dot"></span> 3 × 3D scenes</span>
+          </div>
+          <span class="card-arrow">→</span>
+        </a>
       </div>
 
-      <div class="card" style="opacity:0.25;pointer-events:none;">
-        <div class="card-tag">Coming Soon</div>
-        <h3>Path Integrals — Feynman's Way</h3>
-        <p>The sum-over-histories formulation from scratch, with interactive path animations.</p>
-        <div class="card-meta"><span>Planned</span></div>
+      <div class="card-wrap">
+        <a href="/spherical-harmonics/" class="card card--qm">
+          <div class="card-accent"></div>
+          <div class="card-tag">Quantum Mechanics</div>
+          <h3>Spherical Harmonics &amp; Legendre Functions</h3>
+          <p class="card-desc">Interactive 3D visualizations of angular momentum eigenstates. Drag and rotate orbital shapes, explore Legendre polynomials, and build intuition for quantum angular structure.</p>
+          <div class="card-meta">
+            <span><span class="meta-dot"></span> ~30 min read</span>
+            <span><span class="meta-dot"></span> 6 interactive visualizations</span>
+            <span><span class="meta-dot"></span> 3 × 3D scenes</span>
+          </div>
+          <span class="card-arrow">→</span>
+        </a>
+      </div>
+
+      <div class="card-wrap">
+        <a href="/harmonic-oscillator/" class="card card--qm">
+          <div class="card-accent"></div>
+          <div class="card-tag">Quantum Mechanics</div>
+          <h3>Harmonic Oscillator Time Evolution</h3>
+          <p class="card-desc">Watch a wave function breathe. Interactive filmstrip of ψ(ε,t) = Aε²e^(-ε²/2) in the harmonic potential — eigenstate decomposition, parity conservation, and coherent states.</p>
+          <div class="card-meta">
+            <span><span class="meta-dot"></span> ~25 min read</span>
+            <span><span class="meta-dot"></span> 7 interactive visualizations</span>
+            <span><span class="meta-dot"></span> 4 exercises</span>
+          </div>
+          <span class="card-arrow">→</span>
+        </a>
+      </div>
+
+      <div class="card-wrap">
+        <a href="/hydrogen-wavefunctions/" class="card card--qm">
+          <div class="card-accent"></div>
+          <div class="card-tag">Quantum Mechanics</div>
+          <h3>Hydrogen Wave Functions</h3>
+          <p class="card-desc">Interactive 3D isosurfaces of hydrogen orbitals. Explore probability density, radial nodes, quantum numbers n, l, m, and the shapes that build the periodic table.</p>
+          <div class="card-meta">
+            <span><span class="meta-dot"></span> ~35 min read</span>
+            <span><span class="meta-dot"></span> 4 interactive visualizations</span>
+            <span><span class="meta-dot"></span> 1 × 3D scene</span>
+          </div>
+          <span class="card-arrow">→</span>
+        </a>
+      </div>
+
+      <div class="card-wrap">
+        <a href="/tensor-operators/" class="card card--qm">
+          <div class="card-accent"></div>
+          <div class="card-tag">Quantum Mechanics</div>
+          <h3>Tensor Operators — The Hierarchy<span class="card-badge">New</span></h3>
+          <p class="card-desc">Scalars and vectors are just the beginning. Explore the infinite hierarchy of rank-k tensor operators, their transformation under rotations, ladder structure, and the Wigner-Eckart theorem.</p>
+          <div class="card-meta">
+            <span><span class="meta-dot"></span> ~40 min read</span>
+            <span><span class="meta-dot"></span> 8 interactive visualizations</span>
+            <span><span class="meta-dot"></span> 1 × 3D scene</span>
+          </div>
+          <span class="card-arrow">→</span>
+        </a>
+      </div>
+
+      <div class="card-wrap">
+        <div class="card card--upcoming">
+          <div class="card-inner">
+            <div class="card-tag">Coming Soon</div>
+            <h3>Tensor Products &amp; Entanglement</h3>
+            <p class="card-desc">Multi-qubit systems, Bell states, density matrices, and the EPR paradox — all visualized.</p>
+            <div class="card-meta"><span>In development</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-wrap">
+        <div class="card card--upcoming">
+          <div class="card-inner">
+            <div class="card-tag">Coming Soon</div>
+            <h3>Path Integrals — Feynman's Way</h3>
+            <p class="card-desc">The sum-over-histories formulation from scratch, with interactive path animations.</p>
+            <div class="card-meta"><span>Planned</span></div>
+          </div>
+        </div>
       </div>
     </section>
 
     <footer>
       <p>DEEPEXPLAIN — BUILT FOR CURIOSITY</p>
+      <p class="footer-sub">Handcrafted explorations of physics &amp; mathematics</p>
+      <p class="footer-year">© 2025–2026</p>
     </footer>
   </div>
 
   <script>
-    // Particle background
+    // ─── Page transition on link clicks ───
+    document.querySelectorAll('.card:not(.card--upcoming)').forEach(card => {
+      card.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+        document.getElementById('page-transition').classList.add('active');
+        setTimeout(() => { window.location.href = href; }, 350);
+      });
+    });
+
+    // ─── Scroll reveal for cards ───
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const cardEl = entry.target.querySelector('.card') || entry.target;
+          const allWraps = Array.from(document.querySelectorAll('.card-wrap'));
+          const idx = allWraps.indexOf(entry.target);
+          setTimeout(() => cardEl.classList.add('revealed'), idx * 130);
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+    document.querySelectorAll('.card-wrap').forEach(wrap => revealObserver.observe(wrap));
+
+    // ─── Count-up animation on stat numbers ───
+    const statNums = document.querySelectorAll('.stat-num[data-target]');
+    let statsCounted = false;
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && !statsCounted) {
+          statsCounted = true;
+          statNums.forEach(el => {
+            const target = parseInt(el.dataset.target);
+            const duration = 1200;
+            const start = performance.now();
+            function tick(now) {
+              const elapsed = now - start;
+              const progress = Math.min(elapsed / duration, 1);
+              // ease-out cubic
+              const eased = 1 - Math.pow(1 - progress, 3);
+              el.textContent = Math.round(eased * target);
+              if (progress < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+          });
+          statsObserver.disconnect();
+        }
+      });
+    }, { threshold: 0.5 });
+    const statsEl = document.querySelector('.stats');
+    if (statsEl) statsObserver.observe(statsEl);
+
+    // ─── Fade scroll hint on scroll ───
+    const scrollHint = document.querySelector('.scroll-hint');
+    if (scrollHint) {
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 80) {
+          scrollHint.style.opacity = '0';
+          scrollHint.style.transition = 'opacity .5s';
+        }
+      }, { passive: true });
+    }
+
+    // ─── Cursor-aware card glow + subtle 3D tilt ───
+    document.querySelectorAll('.card:not(.card--upcoming)').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top) / rect.height;
+        card.style.setProperty('--mx', (x * 100) + '%');
+        card.style.setProperty('--my', (y * 100) + '%');
+        // subtle 3D tilt
+        const tiltX = (y - 0.5) * -3;
+        const tiltY = (x - 0.5) * 3;
+        card.style.transform = `translateY(-4px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = '';
+      });
+    });
+
+    // ─── Parallax header on scroll ───
+    const brandMark = document.querySelector('.brand-mark');
+    const heroGlow = document.querySelector('.hero-glow');
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const scrollY = window.scrollY;
+          if (scrollY < 600) {
+            const rate = scrollY * 0.15;
+            brandMark.style.transform = `translateY(${rate}px)`;
+            heroGlow.style.transform = `translateX(-50%) translateY(${scrollY * 0.08}px)`;
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // ─── Particle background (performance-aware) ───
     const c = document.getElementById('bg-canvas');
     const ctx = c.getContext('2d');
     let W, H, particles = [];
-    const N = 80;
+    const isMobile = window.innerWidth < 768;
+    const N = isMobile ? 40 : 80;
 
     function resize() {
       W = c.width = window.innerWidth;
@@ -211,17 +783,27 @@
     resize();
     window.addEventListener('resize', resize);
 
+    const colors = [
+      [92, 156, 230],   // blue
+      [180, 120, 232],  // violet
+      [230, 140, 216],  // rose
+    ];
     for (let i = 0; i < N; i++) {
+      const col = colors[Math.floor(Math.random() * colors.length)];
+      const depth = Math.random();
       particles.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.15,
-        vy: (Math.random() - 0.5) * 0.15,
-        r: Math.random() * 1.5 + 0.3,
-        o: Math.random() * 0.12 + 0.02
+        x: Math.random() * (W || 1200),
+        y: Math.random() * (H || 800),
+        vx: (Math.random() - 0.5) * 0.1 * (0.5 + depth * 0.5),
+        vy: (Math.random() - 0.5) * 0.1 * (0.5 + depth * 0.5),
+        r: (Math.random() * 1.2 + 0.3) * (0.6 + depth * 0.4),
+        o: (Math.random() * 0.09 + 0.012) * (0.5 + depth * 0.5),
+        col: col,
+        depth: depth
       });
     }
 
+    const connDist = isMobile ? 100 : 130;
     function draw() {
       ctx.clearRect(0, 0, W, H);
       for (let i = 0; i < N; i++) {
@@ -233,20 +815,25 @@
         if (p.y > H) p.y = 0;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(92,156,230,${p.o})`;
+        ctx.fillStyle = `rgba(${p.col[0]},${p.col[1]},${p.col[2]},${p.o})`;
         ctx.fill();
-        // Connect nearby
-        for (let j = i + 1; j < N; j++) {
-          const q = particles[j];
-          const dx = p.x - q.x, dy = p.y - q.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 150) {
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(q.x, q.y);
-            ctx.strokeStyle = `rgba(92,156,230,${0.03 * (1 - dist / 150)})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
+        // connections (skip on mobile for performance)
+        if (!isMobile) {
+          for (let j = i + 1; j < N; j++) {
+            const q = particles[j];
+            const dx = p.x - q.x, dy = p.y - q.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < connDist) {
+              const avgR = (p.col[0] + q.col[0]) >> 1;
+              const avgG = (p.col[1] + q.col[1]) >> 1;
+              const avgB = (p.col[2] + q.col[2]) >> 1;
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(q.x, q.y);
+              ctx.strokeStyle = `rgba(${avgR},${avgG},${avgB},${0.02 * (1 - dist / connDist)})`;
+              ctx.lineWidth = 0.4;
+              ctx.stroke();
+            }
           }
         }
       }

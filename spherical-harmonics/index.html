@@ -10,7 +10,17 @@
   <meta property="og:description" content="Interactive 3D visualizations of spherical harmonics and Legendre functions in quantum mechanics.">
   <meta property="og:url" content="https://deepexplain.dev/spherical-harmonics/">
   <meta property="og:type" content="article">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#x1F30D;</text></svg>">
+  <meta property="og:site_name" content="DeepExplain">
+  <meta property="og:image" content="https://deepexplain.dev/assets/og-spherical-harmonics.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Spherical Harmonics — DeepExplain">
+  <meta name="twitter:description" content="Interactive 3D visualizations of spherical harmonics and Legendre functions in quantum mechanics.">
+  <meta name="twitter:image" content="https://deepexplain.dev/assets/og-spherical-harmonics.png">
+  <meta name="theme-color" content="#05050b">
+  <meta name="author" content="DeepExplain">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2270%22 font-family=%22monospace%22 fill=%22%235c9ce6%22>DE</text></svg>">
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -22,8 +32,11 @@
 </head>
 <body>
 
+<div class="page-transition" id="page-transition"></div>
+<div class="scroll-progress" id="scroll-progress"></div>
+
 <!-- Navigation -->
-<nav class="topnav">
+<nav class="topnav" id="topnav">
   <a href="../" class="nav-home">
     <span class="nav-logo">&#x27E8; &#x27E9;</span>
     <span>Deep<span class="accent">Explain</span></span>
@@ -92,6 +105,32 @@ $$P_0(x) = 1 \qquad P_1(x) = x \qquad P_2(x) = \tfrac{1}{2}(3x^2-1) \qquad P_3(x
   <div class="readout" id="legendre-readout"></div>
 </div>
 
+<p>But what do these polynomials look like mapped onto a sphere? Since $P_l(\cos\theta)$ depends only on the polar angle $\theta$, we can revolve the polar profile around the $z$-axis. The result is a <em>zonal harmonic</em> &mdash; a 3D surface whose radius at each direction equals $|P_l(\cos\theta)|$. Blue lobes are positive, pink are negative:</p>
+
+<!-- Interactive: Legendre polynomials as 3D surfaces of revolution -->
+<div class="interactive glow-border" id="legendre-3d-container">
+  <div class="interactive-label">Explore &middot; Legendre Polynomials in Spherical Coordinates (3D)</div>
+  <div class="controls">
+    <div class="ctrl" style="min-width:100%">
+      <div class="btn-row" id="legendre-3d-btns">
+        <button class="btn active" data-l="0">P&#x2080;</button>
+        <button class="btn" data-l="1">P&#x2081;</button>
+        <button class="btn" data-l="2">P&#x2082;</button>
+        <button class="btn" data-l="3">P&#x2083;</button>
+        <button class="btn" data-l="4">P&#x2084;</button>
+        <button class="btn" data-l="5">P&#x2085;</button>
+      </div>
+    </div>
+  </div>
+  <div class="state-readout" id="legendre-3d-state">P&#x2080;(cos &#x3B8;)</div>
+  <div class="viz" id="legendre-3d-viz" style="height:420px;position:relative;">
+    <canvas id="legendre-3d-canvas" style="width:100%;height:100%;cursor:grab;"></canvas>
+  </div>
+  <div class="readout" id="legendre-3d-readout"></div>
+</div>
+
+<p>Notice how $P_0$ is a perfect sphere (constant in all directions), $P_1$ produces two lobes (a dipole), $P_2$ gives a quadrupolar shape with a &ldquo;doughnut&rdquo; pinch. Each higher $l$ adds another nodal ring where the surface passes through zero.</p>
+
 <p>The key property: Legendre polynomials form a <em>complete orthogonal basis</em> for functions on $[-1, 1]$. Any well-behaved function can be expanded in a Legendre series, analogous to a Fourier series but on the sphere.</p>
 
 <h2 class="section-break">Associated Legendre Functions $P_l^m$</h2>
@@ -123,6 +162,32 @@ $$P_1^1 = -\sin\theta \qquad P_2^1 = -3\sin\theta\cos\theta \qquad P_2^2 = 3\sin
   <div class="readout" id="assoc-legendre-readout"></div>
 </div>
 
+<p>The 2D plot above shows the function vs $\theta$. To see how these functions actually distribute on a sphere, we revolve $|P_l^m(\cos\theta)|$ around the $z$-axis. As $m$ increases from 0 toward $l$, the lobes compress from the poles toward the equatorial plane:</p>
+
+<!-- Interactive: Associated Legendre 3D surface of revolution -->
+<div class="interactive glow-border" id="assoc3d-container">
+  <div class="interactive-label">Explore &middot; Associated Legendre Functions in Spherical Coordinates (3D)</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>l <span class="val" id="assoc3d-l-val">2</span></label>
+      <input type="range" id="assoc3d-l-slider" min="0" max="5" value="2" step="1">
+    </div>
+    <div class="ctrl">
+      <label>m <span class="val" id="assoc3d-m-val">0</span></label>
+      <input type="range" id="assoc3d-m-slider" min="0" max="5" value="0" step="1">
+    </div>
+  </div>
+  <div class="state-readout" id="assoc3d-state">P&#x2082;&#x2070;(cos &#x3B8;)</div>
+  <div class="viz" id="assoc3d-viz" style="height:420px;position:relative;">
+    <canvas id="assoc3d-canvas" style="width:100%;height:100%;cursor:grab;"></canvas>
+  </div>
+  <div class="readout" id="assoc3d-readout"></div>
+</div>
+
+<div class="aside-note">
+  <strong>Zonal vs Sectoral:</strong> when $m = 0$, the surface is axially symmetric (zonal). When $m = l$, the lobes concentrate near the equator (sectoral). Intermediate values produce tesseral patterns with both polar and azimuthal nodal structure.
+</div>
+
 <h2 class="section-break">Visualizing Spherical Harmonics in 3D</h2>
 
 <p>Now for the main event. Each spherical harmonic $Y_l^m(\theta, \phi)$ defines a function on the surface of a sphere. To visualize it, we plot $|Y_l^m(\theta,\phi)|$ as the radial distance from the origin &mdash; the resulting surface shows the angular probability distribution.</p>
@@ -139,11 +204,11 @@ $$Y_{l}^{m,\text{real}} = \begin{cases} \sqrt{2}\,\text{Re}(Y_l^m) & m > 0 \\ Y_
   <div class="controls">
     <div class="ctrl">
       <label>l (degree) <span class="val" id="sh-l-val">1</span></label>
-      <input type="range" id="sh-l-slider" min="0" max="4" value="1" step="1">
+      <input type="range" id="sh-l-slider" min="0" max="5" value="1" step="1">
     </div>
     <div class="ctrl">
       <label>m (order) <span class="val" id="sh-m-val">0</span></label>
-      <input type="range" id="sh-m-slider" min="-4" max="4" value="0" step="1">
+      <input type="range" id="sh-m-slider" min="-5" max="5" value="0" step="1">
     </div>
   </div>
   <div class="state-readout" id="sh-state-display"></div>
@@ -171,12 +236,20 @@ $$Y_1^0(\theta) = \sqrt{\frac{3}{4\pi}} \cos\theta$$
 
 $$Y_2^0(\theta) = \sqrt{\frac{5}{16\pi}}(3\cos^2\theta - 1)$$
 
+<h2 class="section-break">The $l = 3$ Harmonics: Octupoles</h2>
+
+<p>The seven $l = 3$ harmonics produce the $f$-orbital shapes &mdash; intricate multi-lobed surfaces that appear in lanthanides and actinides. The $m = 0$ case gives:</p>
+
+$$Y_3^0(\theta) = \sqrt{\frac{7}{16\pi}}(5\cos^3\theta - 3\cos\theta)$$
+
+<p>This creates three pairs of lobes along the $z$-axis. As $|m|$ increases, the lobes rotate and split into more complex patterns. Set the explorer above to $l = 3$ and drag the $m$ slider to see all seven f-orbital shapes morph smoothly between each other.</p>
+
 <!-- 3D scene: side-by-side comparison -->
-<div class="scene-3d" id="gallery-scene">
+<div class="scene-3d" id="gallery-scene" style="height:700px;">
   <canvas id="gallery-canvas"></canvas>
   <div class="scene-3d-overlay">
-    <div class="scene-3d-label">3D &middot; Gallery &mdash; l = 0, 1, 2 harmonics</div>
-    <div class="scene-3d-readout" id="gallery-readout">Y&#x2080;&#x2070; &middot; Y&#x2081;&#x2070; &middot; Y&#x2082;&#x2070;</div>
+    <div class="scene-3d-label">3D &middot; Complete Gallery &mdash; All harmonics for l = 0, 1, 2, 3</div>
+    <div class="scene-3d-readout" id="gallery-readout">Drag to rotate &middot; s &middot; p &middot; d &middot; f orbitals</div>
   </div>
 </div>
 
@@ -262,6 +335,49 @@ $$\hat{L}^2 Y_l^m = \hbar^2 l(l+1)\, Y_l^m \qquad \hat{L}_z Y_l^m = \hbar m \, Y
 </main>
 
 <script src="../js/spherical-harmonics.js"></script>
+
+<script>
+// Scroll progress bar
+const progressBar = document.getElementById('scroll-progress');
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  progressBar.style.width = (docHeight > 0 ? (scrollTop / docHeight) * 100 : 0) + '%';
+}, { passive: true });
+
+// Scroll reveal for interactive sections and headings
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('revealed');
+      revealObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.05, rootMargin: '0px 0px -60px 0px' });
+
+document.querySelectorAll('.interactive, .scene-3d, h2.section-break').forEach(el => revealObs.observe(el));
+
+// Nav scroll state
+const topnav = document.getElementById('topnav');
+let navTicking = false;
+window.addEventListener('scroll', () => {
+  if (!navTicking) {
+    requestAnimationFrame(() => {
+      topnav.classList.toggle('scrolled', window.scrollY > 40);
+      navTicking = false;
+    });
+    navTicking = true;
+  }
+}, { passive: true });
+
+// Page transition on nav-home click
+document.querySelector('.nav-home').addEventListener('click', function(e) {
+  e.preventDefault();
+  const href = this.getAttribute('href');
+  document.getElementById('page-transition').classList.add('active');
+  setTimeout(() => { window.location.href = href; }, 300);
+});
+</script>
 
 <!-- GA4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-GY760J0K7L"></script>

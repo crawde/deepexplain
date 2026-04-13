@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hydrogen Wave Functions — DeepExplain</title>
+  <meta name="description" content="Interactive 3D visualization of hydrogen atom wave functions. Explore orbital shapes, radial nodes, quantum numbers n, l, m, and probability density isosurfaces.">
+  <link rel="canonical" href="https://deepexplain.dev/hydrogen-wavefunctions/">
+  <meta property="og:title" content="Hydrogen Wave Functions — DeepExplain">
+  <meta property="og:description" content="Interactive 3D isosurfaces of hydrogen orbitals. Drag, rotate, and explore the quantum numbers that shape the atom.">
+  <meta property="og:url" content="https://deepexplain.dev/hydrogen-wavefunctions/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="DeepExplain">
+  <meta property="og:image" content="https://deepexplain.dev/assets/og-hydrogen-wavefunctions.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Hydrogen Wave Functions — DeepExplain">
+  <meta name="twitter:description" content="Interactive 3D isosurfaces of hydrogen orbitals. Drag, rotate, and explore the quantum numbers that shape the atom.">
+  <meta name="twitter:image" content="https://deepexplain.dev/assets/og-hydrogen-wavefunctions.png">
+  <meta name="theme-color" content="#05050b">
+  <meta name="author" content="DeepExplain">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2270%22 font-family=%22monospace%22 fill=%22%235c9ce6%22>DE</text></svg>">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="page-transition" id="page-transition"></div>
+<div class="scroll-progress" id="scroll-progress"></div>
+
+<!-- Navigation -->
+<nav class="topnav" id="topnav">
+  <a href="../" class="nav-home">
+    <span class="nav-logo">&#x27E8; &#x27E9;</span>
+    <span>Deep<span class="accent">Explain</span></span>
+  </a>
+  <span class="nav-sep">&#xB7;</span>
+  <span class="nav-current">Hydrogen Wave Functions</span>
+</nav>
+
+<!-- Hero -->
+<div class="hero-scene" id="hydrogen-hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-overlay">
+    <div class="hero-title-wrap">
+      <h1 class="hero-title">The shapes of the simplest atom in the universe.</h1>
+      <p class="hero-sub">Drag to rotate. Pick an orbital below.</p>
+    </div>
+  </div>
+  <div class="hero-state" id="hero-readout">ψ₁₀₀ — 1s</div>
+  <div class="scroll-hint"><div class="scroll-arrow"></div></div>
+</div>
+
+<!-- Main content -->
+<main>
+
+<p class="lead">The hydrogen atom is the only atom with an exact analytical solution to the Schr&ouml;dinger equation. Its wave functions $\psi_{nlm}(r, \theta, \phi)$ are the foundation of all atomic physics.</p>
+
+<p>The solution separates into three pieces &mdash; one for each coordinate:</p>
+
+$$\psi_{nlm}(r, \theta, \phi) = R_{nl}(r) \cdot Y_l^m(\theta, \phi)$$
+
+<p>where $R_{nl}(r)$ is the <em>radial wave function</em> and $Y_l^m(\theta, \phi)$ is the <em>spherical harmonic</em> we explored in the <a href="../spherical-harmonics/">previous article</a>. The quantum numbers are:</p>
+
+<ul>
+  <li>$n = 1, 2, 3, \ldots$ &mdash; the <strong>principal quantum number</strong>, setting the energy level $E_n = -13.6\text{ eV}/n^2$</li>
+  <li>$l = 0, 1, \ldots, n-1$ &mdash; the <strong>orbital angular momentum quantum number</strong></li>
+  <li>$m = -l, \ldots, +l$ &mdash; the <strong>magnetic quantum number</strong>, the $z$-projection of angular momentum</li>
+</ul>
+
+<h2 class="section-break">The Radial Wave Function $R_{nl}(r)$</h2>
+
+<p>The radial part solves the radial Schr&ouml;dinger equation with the Coulomb potential $V(r) = -e^2/(4\pi\epsilon_0 r)$. The solution involves the <em>associated Laguerre polynomials</em> $L_{n-l-1}^{2l+1}$:</p>
+
+$$R_{nl}(r) = \sqrt{\left(\frac{2}{na_0}\right)^3 \frac{(n-l-1)!}{2n[(n+l)!]}} \; e^{-r/(na_0)} \left(\frac{2r}{na_0}\right)^l L_{n-l-1}^{2l+1}\!\left(\frac{2r}{na_0}\right)$$
+
+<p>where $a_0 \approx 0.529\text{ &Aring;}$ is the Bohr radius. The first few radial functions (in units of $a_0$):</p>
+
+$$R_{10} = 2e^{-r} \qquad R_{20} = \frac{1}{2\sqrt{2}}\left(2-r\right)e^{-r/2} \qquad R_{21} = \frac{1}{2\sqrt{6}}\,r\,e^{-r/2}$$
+
+<p>The number of <em>radial nodes</em> &mdash; spherical shells where $R = 0$ &mdash; is $n - l - 1$. Explore the radial wave functions below:</p>
+
+<!-- Interactive: Radial wave function R_nl(r) -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Explore &middot; Radial Wave Function $R_{nl}(r)$</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>n <span class="val" id="n-val">2</span></label>
+      <input type="range" id="n-slider" min="1" max="5" value="2" step="1">
+    </div>
+    <div class="ctrl">
+      <label>l <span class="val" id="l-val">1</span></label>
+      <input type="range" id="l-slider" min="0" max="1" value="1" step="1">
+    </div>
+  </div>
+  <div class="viz" id="radial-viz" style="height:320px;"></div>
+  <div class="readout" id="radial-readout"></div>
+</div>
+
+<p>Notice how $R_{10}$ has no radial nodes (it just decays from the origin), while $R_{20}$ passes through zero once &mdash; creating a nodal sphere at $r = 2a_0$. The electron has zero probability of being found at that radius.</p>
+
+<h2 class="section-break">Radial Probability Distribution $r^2|R_{nl}|^2$</h2>
+
+<p>The probability of finding the electron between $r$ and $r + dr$ is not simply $|R|^2$. Because we're in 3D, the volume element is $r^2 \sin\theta \, dr \, d\theta \, d\phi$, so the <em>radial probability density</em> is $r^2|R_{nl}(r)|^2$.</p>
+
+<p>This makes a large difference: even though $|R_{10}|^2$ is largest at $r = 0$, the probability of finding the electron <em>near</em> the origin is small because the volume shell $4\pi r^2 dr$ is tiny there. The peak of $r^2|R_{10}|^2$ occurs at $r = a_0$ &mdash; the Bohr radius, exactly where Bohr's classical model predicted.</p>
+
+<!-- Interactive: Radial probability r²|R|² -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Explore &middot; Radial Probability Density $r^2|R_{nl}(r)|^2$</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>n <span class="val">2</span></label>
+      <input type="range" class="sync-n" min="1" max="5" value="2" step="1">
+    </div>
+    <div class="ctrl">
+      <label>l <span class="val">1</span></label>
+      <input type="range" class="sync-l" min="0" max="1" value="1" step="1">
+    </div>
+  </div>
+  <div class="viz" id="prob-viz" style="height:320px;"></div>
+  <div class="readout" id="prob-readout"></div>
+</div>
+
+<p>For $n = 2$, $l = 0$ (the 2s orbital), the probability peaks twice &mdash; corresponding to the electron spending time both near the nucleus and further out, with a radial node in between. For $n = 2$, $l = 1$ (the 2p orbital), there is a single peak further from the nucleus. Higher $n$ pushes the electron further out and adds more peaks.</p>
+
+<h2 class="section-break">Counting Nodes</h2>
+
+<p>The wave function's nodes reveal deep structure. For hydrogen:</p>
+
+<ul>
+  <li><strong>Radial nodes:</strong> $n - l - 1$ &mdash; spherical shells where $R_{nl} = 0$</li>
+  <li><strong>Angular nodes in $\theta$:</strong> $l - |m|$ &mdash; conical surfaces about the $z$-axis where $Y_l^m = 0$</li>
+  <li><strong>Angular nodes in $\phi$:</strong> $|m|$ &mdash; planes through the $z$-axis where $\text{Re}(e^{im\phi}) = 0$ (for real harmonics)</li>
+  <li><strong>Total nodes:</strong> $n - 1$</li>
+</ul>
+
+<p>The total is always $n - 1$, split between radial and angular. As $l$ increases (for fixed $n$), radial nodes convert into angular nodes: the wave function trades spherical shells for cones and planes.</p>
+
+<!-- Interactive: Node counter -->
+<div class="interactive glow-border">
+  <div class="interactive-label">Explore &middot; Node Structure of $\psi_{nlm}$</div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>n <span class="val">2</span></label>
+      <input type="range" class="sync-n" min="1" max="5" value="2" step="1">
+    </div>
+    <div class="ctrl">
+      <label>l <span class="val">1</span></label>
+      <input type="range" class="sync-l" min="0" max="1" value="1" step="1">
+    </div>
+    <div class="ctrl">
+      <label>m <span class="val">0</span></label>
+      <input type="range" class="sync-m" min="-1" max="1" value="0" step="1">
+    </div>
+  </div>
+  <div class="viz" id="node-viz" style="height:200px;"></div>
+</div>
+
+<h2 class="section-break">3D Orbital Shapes: Isosurfaces of $|\psi|^2$</h2>
+
+<p>The most intuitive way to visualize an orbital is as an <strong>isosurface of constant probability density</strong>. We pick a threshold value and draw the surface where $|\psi_{nlm}|^2$ equals that value. The electron is most likely found inside this surface.</p>
+
+<p>Blue lobes show regions where $\psi > 0$; pink lobes show $\psi < 0$. The sign has no physical meaning for probability (which depends on $|\psi|^2$), but it reveals the wave function's phase structure &mdash; crucial for understanding chemical bonding.</p>
+
+<!-- Interactive: 3D isosurface orbital explorer -->
+<div class="interactive glow-border" id="orbital-container">
+  <div class="interactive-label">Explore &middot; Hydrogen Orbital Isosurfaces</div>
+  <div class="controls">
+    <div class="ctrl" style="min-width:100%">
+      <div class="btn-row" id="orbital-presets">
+        <button class="btn active" data-orbital="1,0,0">1s</button>
+        <button class="btn" data-orbital="2,0,0">2s</button>
+        <button class="btn" data-orbital="2,1,0">2p₀</button>
+        <button class="btn" data-orbital="2,1,1">2p₁</button>
+        <button class="btn" data-orbital="3,0,0">3s</button>
+        <button class="btn" data-orbital="3,1,0">3p₀</button>
+        <button class="btn" data-orbital="3,2,0">3d₀</button>
+        <button class="btn" data-orbital="3,2,1">3d₁</button>
+        <button class="btn" data-orbital="3,2,2">3d₂</button>
+        <button class="btn" data-orbital="4,0,0">4s</button>
+        <button class="btn" data-orbital="4,3,0">4f₀</button>
+      </div>
+    </div>
+    <div class="ctrl">
+      <label>Isosurface threshold <span class="val" id="iso-val">1.0×</span></label>
+      <input type="range" id="iso-slider" min="0.2" max="3.0" value="1.0" step="0.1">
+    </div>
+  </div>
+  <div class="state-readout" id="orbital-state">ψ₁₀₀ — 1s orbital</div>
+  <div class="viz" id="orbital-viz" style="height:450px;position:relative;">
+    <canvas id="orbital-canvas" style="width:100%;height:100%;cursor:grab;"></canvas>
+  </div>
+  <div class="readout" id="orbital-readout">Drag to rotate &middot; Blue = ψ &gt; 0 &middot; Pink = ψ &lt; 0</div>
+</div>
+
+<div class="aside-note">
+  <strong>Try this:</strong> select the 3s orbital and lower the isosurface threshold. Two concentric spherical shells appear — the radial nodes at $r \approx 2a_0$ and $r \approx 7a_0$ are visible as gaps between shells. Now switch to 3d₀ — the radial nodes disappear (0 radial nodes for $l = 2$) and angular nodes (cones) appear instead.
+</div>
+
+<h2 class="section-break">The 1s Orbital: Ground State</h2>
+
+<p>The simplest hydrogen orbital has $n = 1$, $l = 0$, $m = 0$:</p>
+
+$$\psi_{100}(r) = \frac{1}{\sqrt{\pi} a_0^{3/2}} e^{-r/a_0}$$
+
+<p>This is spherically symmetric — no angular dependence at all. The electron cloud is a fuzzy sphere, densest at the nucleus and decaying exponentially. There are zero nodes ($n - 1 = 0$). The energy is $E_1 = -13.6\text{ eV}$.</p>
+
+<h2 class="section-break">The 2s Orbital: First Radial Node</h2>
+
+<p>For $n = 2$, $l = 0$:</p>
+
+$$\psi_{200}(r) = \frac{1}{4\sqrt{2\pi} a_0^{3/2}} \left(2 - \frac{r}{a_0}\right) e^{-r/(2a_0)}$$
+
+<p>Still spherically symmetric ($l = 0$ means $Y_0^0$ is constant), but now there is one radial node at $r = 2a_0$. The isosurface shows two concentric shells — an inner sphere and an outer shell, separated by a nodal surface where $\psi = 0$.</p>
+
+<h2 class="section-break">The 2p Orbitals: Angular Structure</h2>
+
+<p>The three $n = 2$, $l = 1$ orbitals ($m = -1, 0, +1$) introduce angular nodes. The $m = 0$ case:</p>
+
+$$\psi_{210} = \frac{1}{4\sqrt{2\pi} a_0^{3/2}} \frac{r}{a_0} e^{-r/(2a_0)} \cos\theta$$
+
+<p>This is the $p_z$ orbital: two lobes along the $z$-axis, separated by the $xy$-plane (where $\cos\theta = 0$). No radial nodes ($n - l - 1 = 0$), one angular node ($l - |m| = 1$, the equatorial plane which is a cone of half-angle $\pi/2$).</p>
+
+<p>The $m = \pm 1$ cases give two more lobes oriented in the $x$ and $y$ directions. In the real-harmonic basis, these become the familiar $p_x$ and $p_y$ orbitals.</p>
+
+<h2 class="section-break">The d and f Orbitals</h2>
+
+<p>For $l = 2$, the five $d$ orbitals have intricate shapes: cloverleaf patterns ($d_{xy}$, $d_{x^2-y^2}$), figure-eights with a torus ($d_{z^2}$), and tilted double lobes ($d_{xz}$, $d_{yz}$). These are the orbitals responsible for the colors of transition metals and the geometry of coordination compounds.</p>
+
+<p>The $l = 3$ $f$ orbitals ($n \ge 4$) have even more complex shapes with up to 6 angular nodes. They play a central role in the chemistry of rare earth elements. Select the 4f₀ preset in the explorer above to see them.</p>
+
+<h2 class="section-break">Energy Levels and Degeneracy</h2>
+
+<p>A remarkable feature of hydrogen: the energy depends <em>only</em> on $n$, not on $l$ or $m$:</p>
+
+$$E_n = -\frac{13.6\text{ eV}}{n^2}$$
+
+<p>This means all orbitals with the same $n$ are <strong>degenerate</strong> &mdash; they have the same energy despite very different shapes. The 2s and three 2p orbitals are all at $E_2 = -3.4\text{ eV}$. This accidental degeneracy is unique to the Coulomb potential and is broken in multi-electron atoms by electron-electron repulsion.</p>
+
+<p>The total number of degenerate states at level $n$ is $n^2$ (ignoring spin) or $2n^2$ (with spin). This directly gives the structure of the periodic table.</p>
+
+<h2 class="section-break">Exercises</h2>
+
+<div class="exercises">
+  <div class="exercise">
+    <p><strong>1.</strong> How many radial nodes does the 3s orbital ($n=3$, $l=0$) have?</p>
+    <input type="text" id="ex1-input" placeholder="Enter answer...">
+    <button class="btn" onclick="checkExercise(1)">Check</button>
+    <div class="feedback" id="ex1-fb"></div>
+  </div>
+
+  <div class="exercise">
+    <p><strong>2.</strong> What is the expression for the number of radial nodes in terms of $n$ and $l$?</p>
+    <input type="text" id="ex2-input" placeholder="Enter answer...">
+    <button class="btn" onclick="checkExercise(2)">Check</button>
+    <div class="feedback" id="ex2-fb"></div>
+  </div>
+
+  <div class="exercise">
+    <p><strong>3.</strong> How many angular nodes does the 1s orbital have?</p>
+    <input type="text" id="ex3-input" placeholder="Enter answer...">
+    <button class="btn" onclick="checkExercise(3)">Check</button>
+    <div class="feedback" id="ex3-fb"></div>
+  </div>
+
+  <div class="exercise">
+    <p><strong>4.</strong> For $l &gt; 0$, the angular nodes in the $\theta$ direction are what geometric shape?</p>
+    <input type="text" id="ex4-input" placeholder="Enter answer...">
+    <button class="btn" onclick="checkExercise(4)">Check</button>
+    <div class="feedback" id="ex4-fb"></div>
+  </div>
+</div>
+
+<p class="closing"><a href="../">DeepExplain</a> &mdash; built for curiosity</p>
+
+</main>
+
+<script src="../js/hydrogen-wavefunctions.js"></script>
+
+<script>
+// Scroll progress bar
+const progressBar = document.getElementById('scroll-progress');
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  progressBar.style.width = (docHeight > 0 ? (scrollTop / docHeight) * 100 : 0) + '%';
+}, { passive: true });
+
+// Scroll reveal for interactive sections and headings
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('revealed');
+      revealObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.05, rootMargin: '0px 0px -60px 0px' });
+
+document.querySelectorAll('.interactive, .scene-3d, h2.section-break').forEach(el => revealObs.observe(el));
+
+// Nav scroll state
+const topnav = document.getElementById('topnav');
+let navTicking = false;
+window.addEventListener('scroll', () => {
+  if (!navTicking) {
+    requestAnimationFrame(() => {
+      topnav.classList.toggle('scrolled', window.scrollY > 40);
+      navTicking = false;
+    });
+    navTicking = true;
+  }
+}, { passive: true });
+
+// Page transition on nav-home click
+document.querySelector('.nav-home').addEventListener('click', function(e) {
+  e.preventDefault();
+  const href = this.getAttribute('href');
+  document.getElementById('page-transition').classList.add('active');
+  setTimeout(() => { window.location.href = href; }, 300);
+});
+
+// Sync secondary sliders with primary ones
+document.querySelectorAll('.sync-n').forEach(function(slider) {
+  slider.addEventListener('input', function() {
+    const nSlider = document.getElementById('n-slider');
+    if (nSlider) { nSlider.value = this.value; nSlider.dispatchEvent(new Event('input')); }
+  });
+});
+document.querySelectorAll('.sync-l').forEach(function(slider) {
+  slider.addEventListener('input', function() {
+    const lSlider = document.getElementById('l-slider');
+    if (lSlider) { lSlider.value = this.value; lSlider.dispatchEvent(new Event('input')); }
+  });
+});
+document.querySelectorAll('.sync-m').forEach(function(slider) {
+  slider.addEventListener('input', function() {
+    const mSlider = document.getElementById('m-slider');
+    if (mSlider) { mSlider.value = this.value; mSlider.dispatchEvent(new Event('input')); }
+  });
+});
+</script>
+
+<!-- GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-GY760J0K7L"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-GY760J0K7L');
+</script>
+
+</body>
+</html>

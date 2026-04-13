@@ -7,7 +7,18 @@
   <meta name="description" content="A novel-length interactive explainer on Dirac notation in quantum mechanics, with live 3D and 2D visualizations at every step.">
   <meta property="og:title" content="Dirac Notation — The Complete Interactive Guide">
   <meta property="og:description" content="Interactive explainer covering bra-ket notation end to end, with 3D Bloch sphere, D3.js visualizations, and exercises.">
+  <meta property="og:url" content="https://deepexplain.dev/dirac-notation/">
   <meta property="og:type" content="article">
+  <meta property="og:site_name" content="DeepExplain">
+  <meta property="og:image" content="https://deepexplain.dev/assets/og-dirac-notation.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Dirac Notation — The Complete Interactive Guide">
+  <meta name="twitter:description" content="Interactive explainer covering bra-ket notation end to end, with 3D Bloch sphere, D3.js visualizations, and exercises.">
+  <meta name="twitter:image" content="https://deepexplain.dev/assets/og-dirac-notation.png">
+  <meta name="theme-color" content="#05050b">
+  <meta name="author" content="DeepExplain">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a18'/%3E%3Ctext x='16' y='24' text-anchor='middle' font-family='serif' font-size='22' font-weight='bold' fill='%234fc3f7'%3E%E2%9F%A8%E2%9F%A9%3C/text%3E%3C/svg%3E">
   <link rel="canonical" href="https://deepexplain.dev/dirac-notation/">
 
@@ -26,7 +37,10 @@
 </head>
 <body>
 
-<nav class="topnav">
+<div class="page-transition" id="page-transition"></div>
+<div class="scroll-progress" id="scroll-progress"></div>
+
+<nav class="topnav" id="topnav">
   <a href="../" class="nav-home">
     <span class="nav-logo">⟨ ⟩</span>
     <span>Deep<span class="accent">Explain</span></span>
@@ -634,6 +648,49 @@
 </main>
 
 <script src="../js/visualizations.js"></script>
+
+<script>
+// Scroll progress bar
+const progressBar = document.getElementById('scroll-progress');
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  progressBar.style.width = (docHeight > 0 ? (scrollTop / docHeight) * 100 : 0) + '%';
+}, { passive: true });
+
+// Scroll reveal for interactive sections and headings
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('revealed');
+      revealObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.05, rootMargin: '0px 0px -60px 0px' });
+
+document.querySelectorAll('.interactive, .scene-3d, h2.section-break').forEach(el => revealObs.observe(el));
+
+// Nav scroll state
+const topnav = document.getElementById('topnav');
+let navTicking = false;
+window.addEventListener('scroll', () => {
+  if (!navTicking) {
+    requestAnimationFrame(() => {
+      topnav.classList.toggle('scrolled', window.scrollY > 40);
+      navTicking = false;
+    });
+    navTicking = true;
+  }
+}, { passive: true });
+
+// Page transition on nav-home click
+document.querySelector('.nav-home').addEventListener('click', function(e) {
+  e.preventDefault();
+  const href = this.getAttribute('href');
+  document.getElementById('page-transition').classList.add('active');
+  setTimeout(() => { window.location.href = href; }, 300);
+});
+</script>
 
 </body>
 </html>

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#05050b"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#5c9ce6"/>
+      <stop offset="100%" stop-color="#7eb4ee"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="60%" cy="40%" r="40%">
+      <stop offset="0%" stop-color="rgba(92,156,230,0.1)"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <!-- Y_1^0 — dumbbell shape (p-orbital-like) -->
+  <g transform="translate(700, 280)">
+    <!-- Positive lobe -->
+    <ellipse cx="0" cy="-80" rx="55" ry="90" fill="none" stroke="#5c9ce6" stroke-width="2" opacity="0.5"/>
+    <ellipse cx="0" cy="-80" rx="55" ry="90" fill="rgba(92,156,230,0.04)"/>
+    <!-- Negative lobe -->
+    <ellipse cx="0" cy="80" rx="55" ry="90" fill="none" stroke="#e68cd8" stroke-width="2" opacity="0.4"/>
+    <ellipse cx="0" cy="80" rx="55" ry="90" fill="rgba(230,140,216,0.03)"/>
+    <!-- Center node -->
+    <circle cx="0" cy="0" r="3" fill="rgba(255,183,77,0.5)"/>
+    <!-- Axis -->
+    <line x1="0" y1="-190" x2="0" y2="190" stroke="rgba(92,156,230,0.08)" stroke-width="0.8"/>
+    <text x="10" y="-175" font-family="Georgia, serif" font-size="14" fill="rgba(92,156,230,0.4)" font-style="italic">z</text>
+  </g>
+  <!-- Y_2^0 — cloverleaf hint -->
+  <g transform="translate(950, 280)" opacity="0.35">
+    <ellipse cx="0" cy="-55" rx="35" ry="60" fill="none" stroke="#5c9ce6" stroke-width="1.5"/>
+    <ellipse cx="0" cy="55" rx="35" ry="60" fill="none" stroke="#5c9ce6" stroke-width="1.5"/>
+    <ellipse cx="0" cy="0" rx="70" ry="25" fill="none" stroke="#e68cd8" stroke-width="1.2"/>
+    <circle cx="0" cy="0" r="2" fill="rgba(255,183,77,0.4)"/>
+  </g>
+  <!-- Y_0^0 — simple sphere -->
+  <g transform="translate(480, 260)" opacity="0.25">
+    <circle cx="0" cy="0" r="50" fill="none" stroke="#5c9ce6" stroke-width="1.5"/>
+    <ellipse cx="0" cy="0" rx="50" ry="18" fill="none" stroke="rgba(92,156,230,0.5)" stroke-width="0.8" stroke-dasharray="4,3"/>
+  </g>
+  <!-- Legendre polynomial curves -->
+  <g transform="translate(130, 150)" opacity="0.2">
+    <text font-family="Georgia, serif" font-size="16" fill="#5c9ce6" font-style="italic">P₀ = 1</text>
+    <text y="30" font-family="Georgia, serif" font-size="16" fill="#7eb4ee" font-style="italic">P₁ = cos θ</text>
+    <text y="60" font-family="Georgia, serif" font-size="16" fill="#e68cd8" font-style="italic">P₂ = (3cos²θ - 1)/2</text>
+  </g>
+  <!-- Coordinate rings -->
+  <g transform="translate(700, 280)" opacity="0.12">
+    <ellipse cx="0" cy="0" rx="150" ry="50" fill="none" stroke="#5c9ce6" stroke-width="0.8" stroke-dasharray="8,6"/>
+    <ellipse cx="0" cy="0" rx="50" ry="150" fill="none" stroke="#5c9ce6" stroke-width="0.8" stroke-dasharray="8,6" transform="rotate(45)"/>
+  </g>
+  <!-- Branding -->
+  <text x="80" y="80" font-family="monospace" font-size="16" letter-spacing="6" fill="rgba(92,156,230,0.5)">DEEPEXPLAIN</text>
+  <!-- Title -->
+  <text x="80" y="510" font-family="Georgia, serif" font-size="42" font-weight="600" fill="#e8e8f0">Spherical Harmonics</text>
+  <text x="80" y="560" font-family="Georgia, serif" font-size="28" fill="#7e7ea0">Angular Momentum Visualized in 3D</text>
+  <!-- Equation -->
+  <text x="850" y="80" font-family="Georgia, serif" font-size="18" fill="rgba(230,140,216,0.4)" font-style="italic">Y_l^m(θ,φ) = N P_l^m(cos θ) e^(imφ)</text>
+  <!-- Border accent -->
+  <rect x="0" y="0" width="4" height="630" fill="url(#blue)" opacity="0.6"/>
+</svg>
